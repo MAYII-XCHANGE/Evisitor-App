@@ -1,0 +1,38 @@
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #f8fafc;
+}
+
+.outlets {
+  flex: 1;
+  min-width: 0;
+  margin-left: 288px;
+  padding: 0 24px 32px;
+}
+
+@media (min-width: 1440px) {
+  .outlets {
+    padding: 0 32px 40px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .outlets {
+    margin-left: 272px;
+    padding: 0 20px 28px;
+  }
+}
+
+@media (max-width: 900px) {
+  .outlets {
+    margin-left: 0;
+    width: 100%;
+    padding: 0 16px 24px;
+  }
+
+  .wrapper {
+    display: block;
+  }
+}
