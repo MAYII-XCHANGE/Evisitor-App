@@ -1,26 +1,30 @@
 import { useQuery } from "@tanstack/react-query";
-import { FiArrowUpRight, FiPrinter } from "react-icons/fi";
+import { FiArrowUpRight } from "react-icons/fi";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion as Motion } from "framer-motion";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { TableSkeleton } from "../../components/ui/Skeleton";
-import { USER_ROLES } from "../../config/navigation";
-import { visitorService } from "../../services/visitorService";
-import { useAuthStore } from "../../store/authStore";
+import { ApiErrorState } from "../../components/ui/ApiErrorState";
+import { USER_ROLES } from "../../config/roles";
+import { dashboardService } from "../../services/dashboardService";
+import { useAuth } from "../../hooks/useAuth";
+import { formatDateTime } from "../../utils/formatters";
 
 export const DashboardPage = () => {
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuth();
   const isSuperAdmin = user?.role === USER_ROLES.SUPER_ADMIN;
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboard"],
-    queryFn: visitorService.getDashboard,
+    queryFn: () => dashboardService.get(),
   });
 
   if (isLoading) {
     return <TableSkeleton />;
   }
+
+  if (error) return <ApiErrorState error={error} onRetry={refetch} />;
 
   return (
     <div className="space-y-6">
@@ -34,7 +38,7 @@ export const DashboardPage = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {data.kpis.map((kpi, index) => (
+        {(data?.kpis || []).map((kpi, index) => (
           <Motion.div key={kpi.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
             <Card>
               <div className="flex items-start justify-between gap-3">
@@ -46,7 +50,7 @@ export const DashboardPage = () => {
                   <FiArrowUpRight />
                 </span>
               </div>
-              <p className={`mt-4 text-sm font-semibold ${kpi.tone === "warning" ? "text-amber-600" : "text-emerald-600"}`}>{kpi.delta} vs yesterday</p>
+              <p className={`mt-4 text-sm font-semibold ${kpi.tone === "warning" ? "text-amber-600" : "text-emerald-600"}`}>{kpi.delta}</p>
             </Card>
           </Motion.div>
         ))}
@@ -60,7 +64,7 @@ export const DashboardPage = () => {
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.visitorTrend}>
+              <LineChart data={data?.visitorTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#edf2f7" />
                 <XAxis dataKey="day" />
                 <YAxis />
@@ -80,7 +84,7 @@ export const DashboardPage = () => {
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.branchStats} layout="vertical" margin={{ left: 24 }}>
+              <BarChart data={data?.branchStats || []} layout="vertical" margin={{ left: 24 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#edf2f7" />
                 <XAxis type="number" />
                 <YAxis dataKey="branch" type="category" width={92} />
@@ -110,7 +114,7 @@ export const DashboardPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.activeVisitors.map((visitor) => (
+                  {(data?.activeVisitors || []).map((visitor) => (
                     <tr key={visitor.id}>
                       <td className="border-b border-gray-100 px-4 py-4 font-semibold text-gray-900 dark:text-white">{visitor.name}</td>
                       <td className="border-b border-gray-100 px-4 py-4 text-gray-600 dark:text-slate-300">{visitor.company}</td>
@@ -130,12 +134,12 @@ export const DashboardPage = () => {
           <Card>
             <h3 className="text-base font-bold text-gray-900 dark:text-white">Recent Activities</h3>
             <div className="mt-4 space-y-4">
-              {data.recentActivities.map((activity) => (
+              {(data?.recentActivities || []).map((activity) => (
                 <div key={activity.id} className="rounded-lg border border-gray-100 p-3 dark:border-slate-800">
                   <p className="text-sm text-gray-700 dark:text-slate-200">
                     <span className="font-bold">{activity.actor}</span> {activity.action}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">{activity.time}</p>
+                  <p className="mt-1 text-xs text-gray-500">{formatDateTime(activity.time)}</p>
                 </div>
               ))}
             </div>

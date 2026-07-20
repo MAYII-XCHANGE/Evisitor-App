@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #00b0f0;
+  --color-primary-50: #effbff;
+  --color-primary-100: #ccefff;
+  --color-primary-700: #007aa8;
+  --color-danger: #dc2626;
+  --color-surface-muted: #f8fafc;
+  --shadow-subtle: 0 1px 2px 0 rgb(15 23 42 / 0.08);
+  --shadow-card: 0 8px 24px -16px rgb(15 23 42 / 0.24);
+}
+
 :root {
   font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
   color-scheme: light;

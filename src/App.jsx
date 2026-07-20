@@ -1,10 +1,13 @@
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes/router.jsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 const App = () => (
   <ErrorBoundary>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </ErrorBoundary>
 );
 

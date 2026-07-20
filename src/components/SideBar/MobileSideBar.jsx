@@ -1,12 +1,12 @@
 import { NavLink } from "react-router-dom";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
-import { getNavigationForRole } from "../../menu/menuItems";
-import { useAuthStore } from "../../store/authStore";
+import { getNavigationForRole } from "../../config/navigation";
+import { useAuth } from "../../hooks/useAuth";
 import logo from "../../assets/novabank_logo_sidebar.png";
 import "./SideBar.css";
 
 const MobileSideBar = ({ showDropdown, dropdownRef, openSubmenu, toggleSubmenu, closeSidebar }) => {
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuth();
   const menuItems = getNavigationForRole(user?.role);
 
   return (

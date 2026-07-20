@@ -1,101 +1,55 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { FiArrowRight, FiLock, FiMail } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { motion as Motion } from "framer-motion";
-import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { Select } from "../../components/ui/Select";
-import { ROLE_LABELS, USER_ROLES } from "../../config/navigation";
-import { useAuthStore } from "../../store/authStore";
+import { useAuth } from "../../hooks/useAuth";
+import { getApiError } from "../../utils/apiResponse";
+import { loginRules } from "../../validation/authValidation";
 import logo from "../../assets/novabank_logo.png";
 import backgroundImage from "../../assets/background.png";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      email: "mayowa.oyeniran@novabank.ng",
-      password: "password",
-      role: USER_ROLES.SUPER_ADMIN,
-    },
+  const location = useLocation();
+  const { login, isAuthenticated, status } = useAuth();
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm({
+    defaultValues: { email: "", password: "" },
   });
 
+  useEffect(() => {
+    if (location.state?.sessionExpired) toast.error("Your session expired. Please sign in again.");
+  }, [location.state]);
+
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+
   const onSubmit = async (values) => {
-    setIsSubmitting(true);
-    window.setTimeout(() => {
-      login(values);
+    try {
+      await login(values);
       toast.success("Welcome to Visitor Management Portal");
-      setIsSubmitting(false);
-      navigate("/dashboard");
-    }, 500);
+      navigate(location.state?.from?.pathname || "/dashboard", { replace: true });
+    } catch (error) {
+      const apiError = getApiError(error, "Sign-in failed");
+      setError("root", { message: apiError.message });
+    }
   };
 
   return (
-    <main
-      className="flex min-h-screen items-center justify-center bg-cover bg-center px-4 py-10"
-      style={{
-        backgroundImage: `linear-gradient(rgba(170, 205, 231, 0.9), rgba(247, 250, 252, 0.92)), url(${backgroundImage})`,
-      }}
-    >
-      <Motion.section
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md rounded-xl border border-white/70 bg-white p-8 shadow-card"
-      >
+    <main className="flex min-h-screen items-center justify-center bg-cover bg-center px-4 py-10" style={{ backgroundImage: `linear-gradient(rgba(170, 205, 231, 0.9), rgba(247, 250, 252, 0.92)), url(${backgroundImage})` }}>
+      <Motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md rounded-xl border border-white/70 bg-white p-8 shadow-card">
         <div className="text-center">
           <img src={logo} alt="NOVA Bank" className="mx-auto h-20 w-auto object-contain" />
           <h1 className="mt-8 text-2xl font-bold text-gray-900">Visitor Management Portal</h1>
           <p className="mt-2 text-sm text-gray-500">Sign in to manage branch visits securely.</p>
         </div>
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-          <Input
-            label="Email"
-            type="email"
-            icon={FiMail}
-            placeholder="name@novabank.ng"
-            error={errors.email?.message}
-            {...register("email", { required: "Email is required" })}
-          />
-          <Input
-            label="Password"
-            type="password"
-            icon={FiLock}
-            placeholder="Enter password"
-            error={errors.password?.message}
-            {...register("password", { required: "Password is required" })}
-          />
-          <Select
-            label="Demo Role"
-            options={Object.values(USER_ROLES).map((role) => ({
-              label: ROLE_LABELS[role],
-              value: role,
-            }))}
-            {...register("role", { required: true })}
-          />
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="relative flex w-full transform justify-center rounded-xl border border-transparent bg-gradient-to-r from-blue-600 to-blue-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-105 hover:from-blue-700 hover:to-blue-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center">
-                <div className="mr-2 h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-                Signing in...
-              </div>
-            ) : (
-              <div className="flex items-center">
-                Sign in
-                <FiArrowRight className="ml-2 h-4 w-4" />
-              </div>
-            )}
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <Input label="Email" type="email" autoComplete="username" icon={FiMail} placeholder="name@novabank.ng" error={errors.email?.message} {...register("email", loginRules.email)} />
+          <Input label="Password" type="password" autoComplete="current-password" icon={FiLock} placeholder="Enter password" error={errors.password?.message} {...register("password", loginRules.password)} />
+          {errors.root && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-danger">{errors.root.message}</p>}
+          <button type="submit" disabled={isSubmitting || status === "loading"} className="relative flex w-full transform justify-center rounded-xl border border-transparent bg-gradient-to-r from-blue-600 to-blue-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:from-blue-700 hover:to-blue-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+            {isSubmitting ? "Signing in..." : <span className="flex items-center">Sign in <FiArrowRight className="ml-2 h-4 w-4" /></span>}
           </button>
         </form>
       </Motion.section>

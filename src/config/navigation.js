@@ -11,61 +11,47 @@ import {
   FiFileText,
   FiGrid,
   FiHome,
+  FiInbox,
+  FiLogIn,
   FiLogOut,
   FiSearch,
   FiSettings,
   FiShield,
   FiTrendingUp,
-  FiUserCheck,
   FiUserPlus,
   FiUsers,
-  FiXCircle,
 } from "react-icons/fi";
+import { ROLE_LABELS, USER_ROLES } from "./roles";
 
-export const USER_ROLES = {
-  SUPER_ADMIN: "SUPER_ADMIN",
-  BRANCH_ADMIN: "BRANCH_ADMIN",
-  Frontdesk: "Frontdesk",
-  EMPLOYEE_HOST: "EMPLOYEE_HOST",
-  SECURITY_OFFICER: "SECURITY_OFFICER",
-  AUDITOR: "AUDITOR",
-};
-
-export const ROLE_LABELS = {
-  [USER_ROLES.SUPER_ADMIN]: "Super Administrator",
-  [USER_ROLES.BRANCH_ADMIN]: "Branch Administrator",
-  [USER_ROLES.Frontdesk]: "Frontdesk",
-  [USER_ROLES.EMPLOYEE_HOST]: "Employee (Host)",
-  [USER_ROLES.SECURITY_OFFICER]: "Security Officer",
-  [USER_ROLES.AUDITOR]: "Auditor",
-};
+export { ROLE_LABELS, USER_ROLES };
 
 export const MENU_ITEMS = {
   dashboard: { label: "Dashboard", path: "/dashboard", icon: FiGrid },
   users: { label: "Manage Users", path: "/users", icon: FiUsers },
   branches: { label: "Manage Branches", path: "/branches", icon: FiHome },
   analytics: { label: "View Analytics", path: "/analytics", icon: FiTrendingUp },
-  branch: { label: "Manage Branch", path: "/branch-management", icon: FiHome },
-  Frontdesks: { label: "Manage Frontdesks", path: "/Frontdesks", icon: FiUserCheck },
   branchReports: { label: "View Branch Reports", path: "/branch-reports", icon: FiFileText },
   departments: { label: "Manage Departments", path: "/departments", icon: FiBriefcase },
   registerVisitor: { label: "Register Visitor", path: "/visitors/register", icon: FiUserPlus },
-  captureDetails: { label: "View all Visitors", path: "/visitors/capture-details", icon: FiUsers },
+  visitors: { label: "View All Visitors", path: "/visitors", icon: FiUsers },
+  photograph: { label: "Visitor Photograph", path: "/visitors/photograph", icon: FiCamera },
+  checkIn: { label: "Check Visitor In", path: "/visitors/check-in", icon: FiLogIn },
   issuePass: { label: "Issue Visitor Pass", path: "/visitor-pass/issue", icon: FiCreditCard },
   checkOut: { label: "Check Visitor Out", path: "/visitors/check-out", icon: FiLogOut },
+  selfServiceRegistrations: { label: "Self-Service Registrations", path: "/self-service-registrations", icon: FiInbox },
   searchVisitors: { label: "Search Visitors", path: "/visitor-search", icon: FiSearch },
-  approveVisitor: { label: "Approve Visitor", path: "/visitor-approvals/approve", icon: FiCheckCircle },
-  rejectVisitor: { label: "Reject Visitor", path: "/visitor-approvals/reject", icon: FiXCircle },
-  expectedVisitors: { label: "View Expected Visitors", path: "/expected-visitors", icon: FiClock },
-  appointments: { label: "Schedule Appointments", path: "/appointments", icon: FiCalendar },
-  notifications: { label: "Receive Notifications", path: "/notifications", icon: FiBell },
-  verifyVisitor: { label: "Verify Visitor", path: "/security/verify-visitor", icon: FiShield },
+  approvals: { label: "Visitor Approvals", path: "/visitor-approvals", icon: FiCheckCircle },
+  expectedVisitors: { label: "Expected Visitors", path: "/expected-visitors", icon: FiClock },
+  appointments: { label: "Visitor Appointments", path: "/appointments", icon: FiCalendar },
+  notifications: { label: "Notifications", path: "/notifications", icon: FiBell },
+  verifyVisitor: { label: "Verify Visitor Pass", path: "/security/verify-visitor", icon: FiShield },
   scanPass: { label: "Scan Visitor Pass", path: "/security/scan-pass", icon: FiCreditCard },
-  activeVisitors: { label: "Monitor Active Visitors", path: "/active-visitors", icon: FiActivity },
-  blacklist: { label: "Blacklist Visitor", path: "/blacklist", icon: FiAlertTriangle },
-  auditReports: { label: "Generate Reports", path: "/audit-reports", icon: FiFileText },
-  logs: { label: "Logs", path: "/audit-logs", icon: FiActivity },
+  activeVisitors: { label: "Active Visitors", path: "/active-visitors", icon: FiActivity },
+  blacklist: { label: "Blacklist", path: "/blacklist", icon: FiAlertTriangle },
+  reports: { label: "Reports", path: "/reports", icon: FiFileText },
+  logs: { label: "Audit Logs", path: "/audit-logs", icon: FiActivity },
   visitorHistory: { label: "Visitor History", path: "/visitor-history", icon: FiClock },
+  settings: { label: "Settings", path: "/settings", icon: FiSettings },
 };
 
 export const roleMenuItems = {
@@ -73,27 +59,34 @@ export const roleMenuItems = {
     MENU_ITEMS.dashboard,
     MENU_ITEMS.users,
     MENU_ITEMS.branches,
-    MENU_ITEMS.analytics,
+    MENU_ITEMS.departments,
+    //MENU_ITEMS.analytics,
+    //MENU_ITEMS.reports,
+    //MENU_ITEMS.blacklist,
+    //MENU_ITEMS.settings,
   ],
   [USER_ROLES.BRANCH_ADMIN]: [
     MENU_ITEMS.dashboard,
-    MENU_ITEMS.branch,
-    MENU_ITEMS.Frontdesks,
+    //MENU_ITEMS.registerVisitor,
+    //MENU_ITEMS.visitors,
+    //MENU_ITEMS.appointments,
+    //MENU_ITEMS.approvals,
+    //MENU_ITEMS.checkIn,
+    //MENU_ITEMS.checkOut,
     MENU_ITEMS.branchReports,
-    MENU_ITEMS.departments,
+    MENU_ITEMS.blacklist,
   ],
-  [USER_ROLES.Frontdesk]: [
+  [USER_ROLES.FRONTDESK]: [
     MENU_ITEMS.dashboard,
     MENU_ITEMS.registerVisitor,
-    MENU_ITEMS.captureDetails,
-    MENU_ITEMS.issuePass,
+    MENU_ITEMS.appointments,
+    MENU_ITEMS.visitors,
+    MENU_ITEMS.selfServiceRegistrations,
     MENU_ITEMS.checkOut,
-    MENU_ITEMS.searchVisitors,
   ],
   [USER_ROLES.EMPLOYEE_HOST]: [
     MENU_ITEMS.dashboard,
-    MENU_ITEMS.approveVisitor,
-    MENU_ITEMS.rejectVisitor,
+    MENU_ITEMS.approvals,
     MENU_ITEMS.expectedVisitors,
     MENU_ITEMS.appointments,
     MENU_ITEMS.notifications,
@@ -107,15 +100,10 @@ export const roleMenuItems = {
   ],
   [USER_ROLES.AUDITOR]: [
     MENU_ITEMS.dashboard,
-    MENU_ITEMS.auditReports,
+    MENU_ITEMS.reports,
     MENU_ITEMS.logs,
     MENU_ITEMS.visitorHistory,
   ],
 };
 
-export const navigationItems = Array.from(
-  new Map(Object.values(roleMenuItems).flat().filter(Boolean).map((item) => [item.path, item])).values(),
-);
-
-export const getNavigationForRole = (role) =>
-  (roleMenuItems[role] || roleMenuItems[USER_ROLES.SUPER_ADMIN]).filter(Boolean);
+export const getNavigationForRole = (role) => roleMenuItems[role] || [];

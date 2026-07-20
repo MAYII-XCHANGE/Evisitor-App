@@ -1,0 +1,30 @@
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FiPlus } from "react-icons/fi";
+import toast from "react-hot-toast";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { ResourceTable } from "../../components/ui/ResourceTable";
+import { Pagination } from "../../components/ui/Pagination";
+import { StatusBadge } from "../../components/ui/StatusBadge";
+import { TableSkeleton } from "../../components/ui/Skeleton";
+import { ApiErrorState } from "../../components/ui/ApiErrorState";
+import { adminService } from "../../services/adminService";
+import { usePagination } from "../../hooks/usePagination";
+import { useAuth } from "../../hooks/useAuth";
+import { PERMISSIONS } from "../../config/roles";
+import { formatDateTime, titleCase } from "../../utils/formatters";
+import { getApiError } from "../../utils/apiResponse";
+import { BlacklistFormModal } from "./BlacklistFormModal";
+
+export const BlacklistPage = () => {
+  const { can } = useAuth();
+  const queryClient = useQueryClient();
+  const pagination = usePagination();
+  const [formOpen, setFormOpen] = useState(false);
+  const result = useQuery({ queryKey: ["blacklist", pagination.page], queryFn: () => adminService.blacklist(pagination) });
+  const deactivate = useMutation({ mutationFn: adminService.deactivateBlacklist, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["blacklist"] }); toast.success("Blacklist entry deactivated"); }, onError: (error) => toast.error(getApiError(error).message) });
+  const columns = [{ header: "Visitor", accessor: "visitor" }, { header: "Reference", accessor: "visitorCode" }, { header: "Reason", accessor: "reason" }, { header: "Severity", accessor: "severity", cell: (value) => <StatusBadge status={titleCase(value)} /> }, { header: "Branch", accessor: "branch" }, { header: "Expires", accessor: "expiresAt", cell: formatDateTime }, { header: "Status", accessor: "active", cell: (value) => <StatusBadge status={value ? "Active" : "Inactive"} /> }, ...(can(PERMISSIONS.MANAGE_BLACKLIST) ? [{ header: "Action", accessor: "id", cell: (id, row) => row.active ? <Button variant="danger" className="px-3" disabled={deactivate.isPending} onClick={() => deactivate.mutate(id)}>Deactivate</Button> : "—" }] : [])];
+  return <div className="space-y-6"><PageHeader eyebrow="Security" title="Blacklist Management" description="Review active visitor restrictions within your permitted scope." actions={can(PERMISSIONS.MANAGE_BLACKLIST) ? <Button variant="danger" onClick={() => setFormOpen(true)}><FiPlus /> Add entry</Button> : null} /><Card>{result.isLoading ? <TableSkeleton /> : result.error ? <ApiErrorState error={result.error} onRetry={result.refetch} /> : <><ResourceTable columns={columns} rows={result.data?.content} emptyTitle="No blacklist entries" /><Pagination page={result.data} onPageChange={pagination.setPage} /></>}</Card><BlacklistFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} /></div>;
+};

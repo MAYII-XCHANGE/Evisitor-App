@@ -1,0 +1,3 @@
+import { ImageCaptureField } from "./ImageCaptureField";
+import { SignaturePad } from "./SignaturePad";
+export const VisitorCaptureStep=({photograph,signature,onPhotographChange,onSignatureChange,errors})=><section><h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Photograph and signature</h2><p className="mt-1 text-sm text-gray-500">You may optionally capture a live photograph and the visitor's signature.</p><div className="mt-6 grid gap-8 lg:grid-cols-2"><ImageCaptureField label="Live photograph (optional)" value={photograph} onChange={onPhotographChange} error={errors.photograph?.message}/><SignaturePad value={signature} onChange={onSignatureChange} error={errors.signature?.message}/></div></section>;

@@ -1,0 +1,13 @@
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { Modal } from "../../components/ui/Modal";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { adminService } from "../../services/adminService";
+import { getApiError } from "../../utils/apiResponse";
+import { branchRules } from "../../validation/adminValidation";
+
+const defaults={name:"",address:"",visitorCapacity:100};
+export const BranchFormModal=({isOpen,branch,onClose})=>{const queryClient=useQueryClient();const editing=Boolean(branch);const{register,handleSubmit,reset,setError,formState:{errors}}=useForm({defaultValues:defaults});useEffect(()=>{reset(branch?{name:branch.name,address:branch.address,visitorCapacity:branch.visitorCapacity}:defaults);},[branch,isOpen,reset]);const close=()=>{reset(defaults);onClose();};const mutation=useMutation({mutationFn:(payload)=>editing?adminService.updateBranch({id:branch.id,payload}):adminService.createBranch(payload),onSuccess:()=>{queryClient.invalidateQueries({queryKey:["admin-branches"]});queryClient.invalidateQueries({queryKey:["admin-options","branches"]});toast.success(editing?"Branch updated":"Branch created");close();},onError:(error)=>setError("root",{message:getApiError(error).message})});const submit=(values)=>mutation.mutate({name:values.name.trim(),address:values.address.trim(),visitorCapacity:Number(values.visitorCapacity)});return <Modal isOpen={isOpen} title={editing?"Edit Branch":"Create New Branch"} description={editing?"Update the branch name, address, and visitor capacity.":"The branch code is generated automatically and the branch starts as active."} onClose={close} size="lg" footer={<><Button variant="secondary" onClick={close}>Cancel</Button><Button type="submit" form="branch-form" disabled={mutation.isPending}>{mutation.isPending?"Saving...":editing?"Save Changes":"Create Branch"}</Button></>}><form id="branch-form" className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(submit)}><Input label="Branch name" error={errors.name?.message} {...register("name",branchRules.name)}/><Input label="Visitor capacity" type="number" error={errors.visitorCapacity?.message} {...register("visitorCapacity",branchRules.visitorCapacity)}/><Input label="Address" className="md:col-span-2" error={errors.address?.message} {...register("address",branchRules.address)}/>{errors.root&&<p className="md:col-span-2 text-sm text-danger">{errors.root.message}</p>}</form></Modal>;};

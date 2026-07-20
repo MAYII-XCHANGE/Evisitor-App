@@ -1,0 +1,59 @@
+export const VISITOR_REGISTRATION_STEPS = [
+  {
+    title: "Visitor details",
+    description: "Identity, contact, type, and purpose",
+    fields: ["firstName", "lastName", "phoneNumber", "email", "company", "visitorType", "purpose"],
+  },
+  {
+    title: "Host & appointment",
+    description: "Host, department, date, and time",
+    fields: ["hostName", "departmentName", "branchName", "appointmentDate", "appointmentTime"],
+  },
+  {
+    title: "Identification",
+    description: "Means of ID and optional document capture",
+    fields: ["idType", "idNumber"],
+  },
+  {
+    title: "Photo & signature",
+    description: "Live photograph and electronic signature",
+    fields: ["photograph", "signature"],
+  },
+  {
+    title: "Additional information",
+    description: "Vehicle and items carried",
+    fields: ["vehicleNumber", "items"],
+  },
+  {
+    title: "Review & consent",
+    description: "Confirm details and accept the terms",
+    fields: ["termsAccepted"],
+  },
+];
+
+export const VISITOR_REGISTRATION_DEFAULTS = {
+  firstName: "",
+  lastName: "",
+  phoneNumber: "",
+  email: "",
+  company: "",
+  visitorType: "GUEST",
+  purpose: "",
+  hostId: "",
+  hostName: "",
+  departmentId: "",
+  departmentName: "",
+  branchId: "",
+  branchName: "",
+  appointmentDate: "",
+  appointmentTime: "",
+  idType: "NATIONAL_ID",
+  idNumber: "",
+  idDocument: null,
+  photograph: null,
+  signature: null,
+  vehicleNumber: "",
+  items: [],
+  termsAccepted: false,
+  termsVersion: "1.0",
+};

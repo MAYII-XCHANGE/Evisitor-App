@@ -1,0 +1,25 @@
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { FiPlus } from "react-icons/fi";
+import ConfirmModal from "../../components/ConfirmModal";
+import { ApiErrorState } from "../../components/ui/ApiErrorState";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Pagination } from "../../components/ui/Pagination";
+import { ResourceTable } from "../../components/ui/ResourceTable";
+import { Select } from "../../components/ui/Select";
+import { TableSkeleton } from "../../components/ui/Skeleton";
+import { StatusBadge } from "../../components/ui/StatusBadge";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { usePagination } from "../../hooks/usePagination";
+import { adminService } from "../../services/adminService";
+import { getApiError } from "../../utils/apiResponse";
+import { formatDate, titleCase } from "../../utils/formatters";
+import { AdminTableActions } from "./AdminTableActions";
+import { BranchFormModal } from "./BranchFormModal";
+import { ResourceDetailsModal } from "./ResourceDetailsModal";
+
+export const BranchesPage=()=>{const queryClient=useQueryClient();const pagination=usePagination();const[search,setSearch]=useState("");const[filters,setFilters]=useState({status:"",sort:"createdAt,desc"});const[editing,setEditing]=useState(undefined);const[viewing,setViewing]=useState(undefined);const[confirm,setConfirm]=useState(undefined);const params={...pagination,...filters,search:useDebouncedValue(search)};const result=useQuery({queryKey:["admin-branches",params],queryFn:()=>adminService.adminBranches(params)});const deleteMutation=useMutation({mutationFn:(row)=>adminService.deleteBranch(row.id),onSuccess:()=>{queryClient.invalidateQueries({queryKey:["admin-branches"]});queryClient.invalidateQueries({queryKey:["admin-options","branches"]});toast.success("Branch deleted");setConfirm(undefined);},onError:(error)=>toast.error(getApiError(error).message)});const columns=useMemo(()=>[{header:"Name",accessor:"name"},{header:"Address",accessor:"address"},{header:"Visitor capacity",accessor:"visitorCapacity"},{header:"Status",accessor:"status",cell:(value)=><StatusBadge status={titleCase(value)}/>},{header:"Assigned users",accessor:"assignedUsers"},{header:"Created",accessor:"createdAt",cell:formatDate},{header:"Actions",accessor:(row)=>row,cell:(_,row)=><AdminTableActions row={row} onView={setViewing} onEdit={setEditing} onDelete={setConfirm} disabled={deleteMutation.isPending} showStatus={false}/>}],[deleteMutation.isPending]);const updateFilter=(name,value)=>{setFilters((current)=>({...current,[name]:value}));pagination.resetPage();};return <div className="space-y-6"><PageHeader eyebrow="Super Admin" title="Branch Management" description="Manage the branches used throughout visitor operations." actions={<Button type="button" onClick={()=>setEditing(null)}><FiPlus/> Create New Branch</Button>}/><Card className="grid gap-4 md:grid-cols-3"><Input label="Search" placeholder="Search branches..." value={search} onChange={(event)=>{setSearch(event.target.value);pagination.resetPage();}}/><Select label="Status" options={[{value:"",label:"All statuses"},{value:"ACTIVE",label:"Active"},{value:"INACTIVE",label:"Inactive"}]} value={filters.status} onChange={(event)=>updateFilter("status",event.target.value)}/><Select label="Sort" options={[{value:"createdAt,desc",label:"Newest"},{value:"createdAt,asc",label:"Oldest"},{value:"name,asc",label:"Name A–Z"}]} value={filters.sort} onChange={(event)=>updateFilter("sort",event.target.value)}/></Card><Card>{result.isLoading?<TableSkeleton/>:result.error?<ApiErrorState error={result.error} onRetry={result.refetch}/>:<><ResourceTable columns={columns} rows={result.data?.content} emptyTitle="No branches found"/><Pagination page={result.data} onPageChange={pagination.setPage}/></>}</Card><BranchFormModal isOpen={editing!==undefined} branch={editing||undefined} onClose={()=>setEditing(undefined)}/><ResourceDetailsModal isOpen={Boolean(viewing)} title={viewing?.name||"Branch details"} onClose={()=>setViewing(undefined)} fields={viewing?[{label:"Address",value:viewing.address},{label:"Visitor capacity",value:String(viewing.visitorCapacity)},{label:"Status",value:titleCase(viewing.status)},{label:"Assigned users",value:String(viewing.assignedUsers)},{label:"Created",value:formatDate(viewing.createdAt)}]:[]}/><ConfirmModal isOpen={Boolean(confirm)} title="Delete branch" message={`Delete ${confirm?.name||"this branch"}? Branches with active assigned users cannot be deleted.`} confirmText="Delete branch" variant="danger" isLoading={deleteMutation.isPending} onCancel={()=>setConfirm(undefined)} onConfirm={()=>deleteMutation.mutate(confirm)}/></div>;};
