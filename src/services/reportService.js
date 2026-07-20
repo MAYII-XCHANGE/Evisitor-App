@@ -2,7 +2,7 @@ import { apiClient } from "./apiClient";
 import { unwrapResponse } from "../utils/apiResponse";
 
 export const reportService = {
-  audit: async ({ page = 0, size = 50 } = {}) =>
+  audit: async ({ page = 0, size = 10 } = {}) =>
     unwrapResponse(await apiClient.get("/reports/audit", { params: { page, size } })),
   visitorVolume: async ({ startDate, endDate } = {}) =>
     unwrapResponse(await apiClient.get("/reports/visitor-volume", { params: { startDate, endDate } })),

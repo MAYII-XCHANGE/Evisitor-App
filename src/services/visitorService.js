@@ -2,9 +2,9 @@ import { apiClient } from "./apiClient";
 import { unwrapResponse } from "../utils/apiResponse";
 
 export const visitorService = {
-  list: async ({ page = 0, size = 20, q = "" } = {}) =>
+  list: async ({ page = 0, size = 10, q = "" } = {}) =>
     unwrapResponse(await apiClient.get("/visitors", { params: { page, size, ...(q ? { q } : {}) } })),
-  search: async ({ q, page = 0, size = 20 }) =>
+  search: async ({ q, page = 0, size = 10 }) =>
     unwrapResponse(await apiClient.get("/visitors/search", { params: { q, page, size } })),
   get: async (id) => unwrapResponse(await apiClient.get(`/visitors/${id}`)),
   register: async (payload) => unwrapResponse(await apiClient.post("/visitors", payload)),
@@ -15,11 +15,11 @@ export const visitorService = {
     return unwrapResponse(await apiClient.post(`/visitors/files/${type}`, body));
   },
   deleteFile: async (id) => apiClient.delete(`/visitors/files/${id}`),
-  directory: async ({ page = 0, size = 20, ...params } = {}) => unwrapResponse(await apiClient.get("/visitors/directory", { params: { page, size, ...params } })),
+  directory: async ({ page = 0, size = 10, ...params } = {}) => unwrapResponse(await apiClient.get("/visitors/directory", { params: { page, size, ...params } })),
   details: async (id) => unwrapResponse(await apiClient.get(`/visitors/${id}/details`)),
   exportCsv: async (params = {}) => (await apiClient.get("/visitors/export", { params: { ...params, format: "csv" }, responseType: "blob" })).data,
   update: async (id, payload) => unwrapResponse(await apiClient.patch(`/visitors/${id}`, payload)),
-  history: async (id, { page = 0, size = 20 } = {}) =>
+  history: async (id, { page = 0, size = 10 } = {}) =>
     unwrapResponse(await apiClient.get(`/visitors/${id}/history`, { params: { page, size } })),
   uploadPhotograph: async (id, file) => {
     const body = new FormData();

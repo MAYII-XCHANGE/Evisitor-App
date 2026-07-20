@@ -22,8 +22,8 @@ Access and refresh tokens are held only in secure `HttpOnly` cookies issued by t
 - `/` — public visitor self-registration landing page; any staff session on that device is cleared
 - `/login` — staff login, linked from the Self-Service landing page
 - `/dashboard` — existing Front Desk dashboard
-- `/visitors/register` — six-step walk-in registration and pre-registered check-in
-- `/appointments` — today's, upcoming, and searchable visitor appointments
+- `/visitors/register` — six-step walk-in registration and check-in
+- `/appointments` — today's searchable visitor appointments
 - `/visitors` — paginated visitor directory, filters, CSV export, and details
 - `/self-service-registrations` — Front Desk review, approval/check-in, and rejection queue
 - `/visitors/check-out` — active visitor checkout

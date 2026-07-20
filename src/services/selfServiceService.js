@@ -38,7 +38,7 @@ export const selfServiceService = {
     if (values.signature) body.append("signature", values.signature);
     return unwrapResponse(await apiClient.post("/self-service/registrations", body));
   },
-  list: async ({ page = 0, size = 20, status = "AWAITING_FRONTDESK", search = "" } = {}) =>
+  list: async ({ page = 0, size = 10, status = "AWAITING_FRONTDESK", search = "" } = {}) =>
     unwrapResponse(await apiClient.get("/self-service/registrations", { params: { page, size, status, ...(search ? { search } : {}) } })),
   approve: async (id) => unwrapResponse(await apiClient.post(`/self-service/registrations/${id}/approve`)),
   reject: async (id, reason) => unwrapResponse(await apiClient.post(`/self-service/registrations/${id}/reject`, { reason })),

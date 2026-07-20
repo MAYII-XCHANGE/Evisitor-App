@@ -5,7 +5,7 @@ export const VISITOR_REGISTRATION_STEPS = [
     fields: ["firstName", "lastName", "phoneNumber", "email", "company", "visitorType", "purpose"],
   },
   {
-    title: "Host & appointment",
+    title: "Host & visit",
     description: "Host, department, date, and time",
     fields: ["hostName", "departmentName", "branchName", "appointmentDate", "appointmentTime"],
   },

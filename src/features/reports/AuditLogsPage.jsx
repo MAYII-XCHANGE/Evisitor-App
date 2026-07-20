@@ -12,7 +12,7 @@ import { formatDateTime, titleCase } from "../../utils/formatters";
 const columns = [{ header: "Time", accessor: "occurredAt", cell: formatDateTime }, { header: "Actor", accessor: "actorName" }, { header: "Action", accessor: "action", cell: titleCase }, { header: "Entity", accessor: "entityType" }, { header: "Entity ID", accessor: "entityId" }, { header: "IP address", accessor: "ipAddress" }];
 
 export const AuditLogsPage = () => {
-  const pagination = usePagination(50);
+  const pagination = usePagination();
   const result = useQuery({ queryKey: ["audit-logs", pagination.page], queryFn: () => reportService.audit(pagination) });
   return <div className="space-y-6"><PageHeader eyebrow="Compliance" title="Audit Logs" description="Inspect immutable authentication and operational events." /><Card>{result.isLoading ? <TableSkeleton /> : result.error ? <ApiErrorState error={result.error} onRetry={result.refetch} /> : <><ResourceTable columns={columns} rows={result.data?.content} emptyTitle="No audit events" /><Pagination page={result.data} onPageChange={pagination.setPage} /></>}</Card></div>;
 };

@@ -51,7 +51,7 @@ apiClient.interceptors.response.use(
     }
 
     const isAuthRequest = request?.url?.includes("/auth/login") || request?.url?.includes("/auth/refresh") || request?.url?.includes("/auth/logout");
-    if (error.response?.status !== 401 || request?._retried || isAuthRequest || !refreshHandler) {
+    if (error.response?.status !== 401 || request?._retried || request?.skipAuthRefresh || isAuthRequest || !refreshHandler) {
       return Promise.reject(error);
     }
 

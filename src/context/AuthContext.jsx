@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { authService } from "../services/authService";
 import { configureApiSession } from "../services/apiClient";
@@ -7,6 +7,7 @@ import { AuthContext } from "./authContextValue";
 
 export const AuthProvider = ({ children }) => {
   const queryClient = useQueryClient();
+  const restorationPromiseRef = useRef(null);
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState("loading");
 
@@ -35,24 +36,34 @@ export const AuthProvider = ({ children }) => {
     });
 
     let active = true;
-    const restoreSession = async () => {
-      try {
+    const restoreSession = () => {
+      restorationPromiseRef.current ||= (async () => {
         await authService.csrf();
-        const currentUser = await authService.me();
-        if (active) {
-          setUser(currentUser);
-          setStatus("authenticated");
+        try {
+          return { user: await authService.me({ skipAuthRefresh: true }) };
+        } catch (error) {
+          if (![401, 403].includes(error.response?.status)) throw error;
+          const session = await authService.refresh();
+          await authService.csrf();
+          return session;
         }
-      } catch {
-        if (active) clearSession();
-      }
+      })().finally(() => {
+        restorationPromiseRef.current = null;
+      });
+      return restorationPromiseRef.current;
     };
 
-    restoreSession();
+    restoreSession()
+      .then((session) => {
+        if (active) applySession(session);
+      })
+      .catch(() => {
+        if (active) clearSession();
+      });
     return () => {
       active = false;
     };
-  }, [clearSession, refreshSession]);
+  }, [applySession, clearSession, refreshSession]);
 
   const login = useCallback(async (credentials) => {
     setStatus("loading");

@@ -1,9 +1,12 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Modal } from "../../components/ui/Modal";
+import { Pagination } from "../../components/ui/Pagination";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { TableSkeleton } from "../../components/ui/Skeleton";
 import { ApiErrorState } from "../../components/ui/ApiErrorState";
 import { visitorService } from "../../services/visitorService";
+import { usePagination } from "../../hooks/usePagination";
 import { apiAssetUrl } from "../../utils/apiAsset";
 import { formatDateTime, titleCase } from "../../utils/formatters";
 
@@ -11,8 +14,10 @@ const Field = ({ label, value }) => <div><dt className="text-xs font-bold upperc
 const DocumentImage = ({ label, path }) => <div><p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p>{path ? <img src={apiAssetUrl(path)} crossOrigin="use-credentials" alt={label} className="h-40 w-full rounded-xl border border-gray-200 bg-gray-50 object-contain" /> : <div className="flex h-40 items-center justify-center rounded-xl bg-gray-50 text-sm text-gray-500">Not provided</div>}</div>;
 
 export const VisitorDetailsModal = ({ visitorId, onClose }) => {
+  const { page: historyPage, size: historySize, setPage: setHistoryPage } = usePagination();
+  useEffect(() => { setHistoryPage(0); }, [visitorId, setHistoryPage]);
   const result = useQuery({ queryKey: ["visitor-details", visitorId], queryFn: () => visitorService.details(visitorId), enabled: Boolean(visitorId) });
-  const history = useQuery({ queryKey: ["visitor-history", visitorId], queryFn: () => visitorService.history(visitorId, { page: 0, size: 50 }), enabled: Boolean(visitorId) });
+  const history = useQuery({ queryKey: ["visitor-history", visitorId, historyPage, historySize], queryFn: () => visitorService.history(visitorId, { page: historyPage, size: historySize }), enabled: Boolean(visitorId) });
   const visitor = result.data;
   return (
     <Modal isOpen={Boolean(visitorId)} title="Visitor details" description="Registration, appointment, check-in, and consent record" onClose={onClose} size="lg">
@@ -22,7 +27,7 @@ export const VisitorDetailsModal = ({ visitorId, onClose }) => {
         <section><h3 className="mb-4 font-bold text-gray-900">Host and appointment</h3><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><Field label="Host" value={visitor.host} /><Field label="Department" value={visitor.department} /><Field label="Appointment" value={visitor.appointmentDate ? `${visitor.appointmentDate} ${visitor.appointmentTime || ""}` : null} /><Field label="Check-in" value={formatDateTime(visitor.checkInAt)} /><Field label="Check-out" value={formatDateTime(visitor.checkOutAt)} /><Field label="Registered" value={formatDateTime(visitor.createdAt)} /></dl></section>
         <section><h3 className="mb-4 font-bold text-gray-900">Captured documents</h3><div className="grid gap-4 sm:grid-cols-3"><DocumentImage label="ID document" path={visitor.idDocumentUrl} /><DocumentImage label="Photograph" path={visitor.photographUrl} /><DocumentImage label="Signature" path={visitor.signatureUrl} /></div></section>
         <section><h3 className="mb-4 font-bold text-gray-900">Items carried</h3>{visitor.items?.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-2">Item</th><th className="p-2">Description</th><th className="p-2">Quantity</th><th className="p-2">Serial number</th></tr></thead><tbody>{visitor.items.map((item) => <tr key={item.id} className="border-b"><td className="p-2">{item.itemName}</td><td className="p-2">{item.description || "—"}</td><td className="p-2">{item.quantity}</td><td className="p-2">{item.serialNumber || "—"}</td></tr>)}</tbody></table></div> : <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">No items were recorded.</p>}</section>
-        <section><h3 className="mb-4 font-bold text-gray-900">Visit history</h3>{history.isLoading ? <p className="text-sm text-gray-500">Loading visit history...</p> : history.data?.content?.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-2">Tag</th><th className="p-2">Host</th><th className="p-2">Purpose</th><th className="p-2">Check-in</th><th className="p-2">Check-out</th><th className="p-2">Status</th></tr></thead><tbody>{history.data.content.map((visit) => <tr key={visit.id} className="border-b"><td className="p-2">{visit.tagNumber || visit.visitCode}</td><td className="p-2">{visit.host}</td><td className="p-2">{visit.purpose}</td><td className="p-2">{formatDateTime(visit.checkInAt)}</td><td className="p-2">{formatDateTime(visit.checkOutAt)}</td><td className="p-2"><StatusBadge status={titleCase(visit.status)} /></td></tr>)}</tbody></table></div> : <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">No previous visits.</p>}</section>
+        <section><h3 className="mb-4 font-bold text-gray-900">Visit history</h3>{history.isLoading ? <p className="text-sm text-gray-500">Loading visit history...</p> : history.error ? <ApiErrorState error={history.error} onRetry={history.refetch} /> : history.data?.content?.length ? <><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-2">Tag</th><th className="p-2">Host</th><th className="p-2">Purpose</th><th className="p-2">Check-in</th><th className="p-2">Check-out</th><th className="p-2">Status</th></tr></thead><tbody>{history.data.content.map((visit) => <tr key={visit.id} className="border-b"><td className="p-2">{visit.tagNumber || visit.visitCode}</td><td className="p-2">{visit.host}</td><td className="p-2">{visit.purpose}</td><td className="p-2">{formatDateTime(visit.checkInAt)}</td><td className="p-2">{formatDateTime(visit.checkOutAt)}</td><td className="p-2"><StatusBadge status={titleCase(visit.status)} /></td></tr>)}</tbody></table></div><Pagination page={history.data} onPageChange={setHistoryPage} /></> : <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">No previous visits.</p>}</section>
         <section className="rounded-xl border border-gray-200 p-4"><h3 className="font-bold text-gray-900">Terms and consent</h3><p className="mt-2 text-sm text-gray-600">{visitor.termsAccepted ? `Accepted version ${visitor.termsVersion} on ${formatDateTime(visitor.termsAcceptedAt)}` : "Consent was not recorded."}</p></section>
       </div> : null}
     </Modal>

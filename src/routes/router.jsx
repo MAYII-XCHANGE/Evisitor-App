@@ -12,7 +12,6 @@ import { VisitorPhotographPage } from "../features/visitors/VisitorPhotographPag
 import { VisitorHistoryPage } from "../features/visitors/VisitorHistoryPage";
 import { AppointmentsPage } from "../features/appointments/AppointmentsPage";
 import { ExpectedVisitorsPage } from "../features/appointments/ExpectedVisitorsPage";
-import { CheckInPage } from "../features/visits/CheckInPage";
 import { ActiveVisitsPage } from "../features/visits/ActiveVisitsPage";
 import { PassOperationsPage } from "../features/passes/PassOperationsPage";
 import { UsersPage } from "../features/admin/UsersPage";
@@ -53,7 +52,6 @@ export const router = createBrowserRouter([
         { path: "appointments", element: secured(appointmentUsers, <AppointmentsPage />) },
         { path: "visitor-approvals", element: secured(roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.EMPLOYEE_HOST), <AppointmentsPage approvalsOnly />) },
         { path: "expected-visitors", element: secured(roles(USER_ROLES.EMPLOYEE_HOST), <ExpectedVisitorsPage />) },
-        { path: "visitors/check-in", element: secured(reception, <CheckInPage />) },
         { path: "visitors/check-out", element: secured(reception, <ActiveVisitsPage checkoutMode />) },
         { path: "self-service-registrations", element: secured(reception, <SelfServiceRegistrationsPage />) },
         { path: "active-visitors", element: secured(roles(...reception, USER_ROLES.SECURITY_OFFICER, USER_ROLES.AUDITOR), <ActiveVisitsPage />) },

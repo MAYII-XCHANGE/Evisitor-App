@@ -6,7 +6,6 @@ import { FiArrowLeft, FiArrowRight, FiCheckCircle, FiLogIn, FiRefreshCw, FiSend 
 import toast from "react-hot-toast";
 import logo from "../../assets/novabank_logo.png";
 import { Button } from "../../components/ui/Button";
-import { useAuth } from "../../hooks/useAuth";
 import { useSelfServiceReset } from "../../hooks/useSelfServiceReset";
 import { selfServiceService } from "../../services/selfServiceService";
 import { getApiError } from "../../utils/apiResponse";
@@ -27,13 +26,11 @@ const localTime = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit"
 const defaults = () => ({ ...VISITOR_REGISTRATION_DEFAULTS, appointmentDate: localDate(), appointmentTime: localTime(), website: "" });
 
 export const SelfServicePage = () => {
-  const { isAuthenticated, logout } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [success, setSuccess] = useState(null);
   const { register, control, handleSubmit, reset, setError, clearErrors, trigger, watch, setValue, formState: { errors } } = useForm({ defaultValues: defaults(), mode: "onTouched" });
   const values = watch();
 
-  useEffect(() => { if (isAuthenticated) logout(); }, [isAuthenticated, logout]);
   useEffect(() => { register("photograph", visitorRegistrationRules.photograph); register("signature", visitorRegistrationRules.signature); }, [register]);
 
   const resetScreen = useCallback(() => { reset(defaults()); setCurrentStep(0); setSuccess(null); clearErrors(); }, [clearErrors, reset]);
@@ -56,11 +53,11 @@ export const SelfServicePage = () => {
   const previous = () => { clearErrors("root"); setCurrentStep((step) => Math.max(step - 1, 0)); };
   const steps = [
     <VisitorDetailsStep key="visitor" register={register} errors={errors} />,
-    <VisitorVisitDetailsStep key="visit" register={register} errors={errors} preRegistered={false} />,
+    <VisitorVisitDetailsStep key="visit" register={register} errors={errors} />,
     <VisitorIdentificationStep key="identification" register={register} errors={errors} idDocument={values.idDocument} onIdDocumentChange={(file) => setValue("idDocument", file, { shouldDirty: true })} />,
     <VisitorCaptureStep key="capture" photograph={values.photograph} signature={values.signature} onPhotographChange={(file) => setValue("photograph", file, { shouldDirty: true, shouldValidate: true })} onSignatureChange={(file) => setValue("signature", file, { shouldDirty: true, shouldValidate: true })} errors={errors} />,
     <VisitorAdditionalInfoStep key="additional" control={control} register={register} errors={errors} />,
-    <VisitorRegistrationReviewStep key="review" values={values} onEdit={setCurrentStep} register={register} errors={errors} preRegistered={false} />,
+    <VisitorRegistrationReviewStep key="review" values={values} onEdit={setCurrentStep} register={register} errors={errors} />,
   ];
 
   if (success) return <main className="self-service-success"><section className="self-service-success-card"><FiCheckCircle className="mx-auto h-14 w-14 text-green-600"/><h1 className="mt-5 text-2xl font-bold text-gray-900">Registration submitted</h1><p className="mt-3 text-gray-600">Please go to the Front Desk for verification and check-in.</p><div className="mx-auto mt-6 max-w-sm rounded-xl bg-primary-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-primary-600">Reference</p><p className="mt-1 text-xl font-bold text-primary-900">{success.reference}</p></div><p className="mt-4 text-sm text-gray-500">This screen resets automatically to protect your information.</p><Button className="self-service-primary-button mt-6" onClick={resetScreen}><FiRefreshCw/>Start another registration</Button></section></main>;

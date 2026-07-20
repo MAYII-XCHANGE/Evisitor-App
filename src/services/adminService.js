@@ -1,7 +1,7 @@
 import { apiClient } from "./apiClient";
 import { unwrapResponse } from "../utils/apiResponse";
 
-const pageParams = ({ page = 0, size = 20, ...filters } = {}) => Object.fromEntries(
+const pageParams = ({ page = 0, size = 10, ...filters } = {}) => Object.fromEntries(
   Object.entries({ page, size, ...filters }).filter(([, value]) => value !== "" && value !== null && value !== undefined),
 );
 

@@ -9,7 +9,7 @@ const source = (relativePath) => readFileSync(new URL(relativePath, import.meta.
 test("registration uses the required six-step order and preserves form defaults", () => {
   assert.equal(VISITOR_REGISTRATION_STEPS.length, 6);
   assert.deepEqual(VISITOR_REGISTRATION_STEPS.map((step) => step.title), [
-    "Visitor details", "Host & appointment", "Identification", "Photo & signature", "Additional information", "Review & consent",
+    "Visitor details", "Host & visit", "Identification", "Photo & signature", "Additional information", "Review & consent",
   ]);
   assert.equal(VISITOR_REGISTRATION_DEFAULTS.items.length, 0);
   assert.equal(VISITOR_REGISTRATION_DEFAULTS.termsAccepted, false);
@@ -45,16 +45,28 @@ test("self-service registration is public while its review queue is Front Desk p
   assert.match(router, /path: "\/self-service", element: <Navigate to="\/" replace/);
   assert.match(router, /path: "self-service-registrations", element: secured\(reception/);
   assert.match(selfServicePage, /to="\/login"/);
+  assert.doesNotMatch(selfServicePage, /logout\(\)/);
   assert.match(service, /post\("\/self-service\/registrations"/);
   assert.match(service, /\/approve/);
   assert.match(service, /\/reject/);
 });
 
-test("registration submits to real walk-in and pre-registered APIs", () => {
+test("authenticated browser sessions are restored safely after a page reload", () => {
+  const authContext = source("../context/AuthContext.jsx");
+  const apiClient = source("../services/apiClient.js");
+  assert.match(authContext, /restorationPromiseRef/);
+  assert.match(authContext, /\[401, 403\]\.includes/);
+  assert.match(authContext, /authService\.refresh\(\)/);
+  assert.match(apiClient, /request\?\.skipAuthRefresh/);
+});
+
+test("registration submits only to the walk-in API", () => {
   const service = source("../services/visitorService.js");
   const appointments = source("../services/appointmentService.js");
+  const registration = source("../features/visitors/VisitorRegistrationPage.jsx");
   assert.match(service, /post\("\/visitors\/walk-in"/);
-  assert.match(appointments, /appointments\/\$\{id\}\/check-in/);
+  assert.doesNotMatch(appointments, /checkInPreRegistered|appointments\/\$\{id\}\/check-in/);
+  assert.doesNotMatch(registration, /preRegistered|PreRegisteredSearchPanel/);
 });
 
 test("review, tag display, and accidental-loss protection are wired", () => {
@@ -68,9 +80,22 @@ test("review, tag display, and accidental-loss protection are wired", () => {
 
 test("appointment actions use backend operations", () => {
   const page = source("../features/appointments/FrontDeskAppointmentsPage.jsx");
-  assert.match(page, /confirmArrival/);
   assert.match(page, /markNoShow/);
   assert.match(page, /frontDeskReschedule/);
+  assert.match(page, /from: today, to: today/);
+  assert.doesNotMatch(page, /Upcoming Appointments|confirmArrival/);
+});
+
+test("table pagination is fixed at ten rows without a page-size selector", () => {
+  const pagination = source("../components/ui/Pagination.jsx");
+  const hook = source("../hooks/usePagination.js");
+  assert.match(hook, /size: 10/);
+  assert.doesNotMatch(pagination, /Rows per page|onPageSizeChange|pageSizeOptions/);
+});
+
+test("top banner has no password-change control", () => {
+  const banner = source("../components/Top Banner/TopBanner.jsx");
+  assert.doesNotMatch(banner, /FiKey|ChangePasswordModal|Change password/);
 });
 
 test("visitor search, filters, details, pagination, and export are connected", () => {
