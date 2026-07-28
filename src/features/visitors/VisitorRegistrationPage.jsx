@@ -18,6 +18,7 @@ import { VisitorRegistrationReviewStep } from "./VisitorRegistrationReviewStep";
 import { VisitorRegistrationStepper } from "./VisitorRegistrationStepper";
 import { RegistrationSuccess } from "./RegistrationSuccess";
 import { VISITOR_REGISTRATION_DEFAULTS, VISITOR_REGISTRATION_STEPS } from "./visitorRegistrationSteps";
+import { useUnsavedChanges } from "../../hooks/usePwa";
 
 const localDate = () => {
   const now = new Date();
@@ -38,6 +39,7 @@ export const VisitorRegistrationPage = () => {
     formState: { errors, isDirty },
   } = useForm({ defaultValues: freshDefaults(), mode: "onTouched" });
   const values = watch();
+  useUnsavedChanges(isDirty && !success);
 
   useEffect(() => {
     register("photograph", visitorRegistrationRules.photograph);
@@ -156,22 +158,32 @@ export const VisitorRegistrationPage = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Register Walk-in Visitor" description="Capture the visitor's details and complete their check-in." />
-      <Card className="space-y-6">
+    <div className="mx-auto w-full max-w-[1320px] space-y-6">
+      <PageHeader title="Register Visitor" />
+      <Card className="overflow-hidden !p-0">
+        <div className="border-b border-primary-100 bg-gradient-to-r from-primary-50 via-white to-primary-50/40 px-5 py-5 sm:px-8 dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
           <VisitorRegistrationStepper steps={VISITOR_REGISTRATION_STEPS} currentStep={currentStep} onStepSelect={setCurrentStep} />
-          <div className="border-t border-gray-100 dark:border-slate-800" />
-          <form className="space-y-6" onSubmit={currentStep === VISITOR_REGISTRATION_STEPS.length - 1 ? handleSubmit((data) => mutation.mutate(data)) : (event) => { event.preventDefault(); nextStep(); }} noValidate>
-            <div className="min-h-[300px]">{stepContent[currentStep]}</div>
-            {errors.root && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-danger">{errors.root.message}</p>}
-            <div className="flex flex-col-reverse justify-between gap-3 border-t border-gray-100 pt-5 sm:flex-row dark:border-slate-800">
-              <Button variant="ghost" onClick={clearForm} disabled={mutation.isPending}><FiTrash2 /> Clear form</Button>
-              <div className="flex justify-end gap-3">
-                {currentStep > 0 && <Button variant="secondary" onClick={previousStep} disabled={mutation.isPending}><FiArrowLeft /> Back</Button>}
-                {currentStep < VISITOR_REGISTRATION_STEPS.length - 1 ? <Button type="button" onClick={nextStep}>Continue <FiArrowRight /></Button> : <Button type="submit" disabled={mutation.isPending}><FiSave /> {mutation.isPending ? "Uploading and registering..." : "Complete registration"}</Button>}
+        </div>
+        <form onSubmit={currentStep === VISITOR_REGISTRATION_STEPS.length - 1 ? handleSubmit((data) => mutation.mutate(data)) : (event) => { event.preventDefault(); nextStep(); }} noValidate>
+          <div className="mx-auto min-h-[420px] max-w-5xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+            <p className="mb-5 text-right text-xs font-medium text-gray-500 dark:text-slate-400"><span className="mr-1 text-danger" aria-hidden="true">*</span>Required fields</p>
+            <div key={currentStep}>{stepContent[currentStep]}</div>
+            {errors.root && <p role="alert" className="mt-6 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-danger">{errors.root.message}</p>}
+          </div>
+          <div className="border-t border-gray-100 bg-gray-50/80 px-5 py-4 sm:px-8 dark:border-slate-800 dark:bg-slate-900/80">
+            <div className="mx-auto flex max-w-5xl flex-col-reverse justify-between gap-3 sm:flex-row sm:items-center">
+              <Button variant="ghost" className="sm:justify-self-start" onClick={clearForm} disabled={mutation.isPending}><FiTrash2 /> Clear form</Button>
+              <div className="grid grid-cols-2 gap-3 sm:flex sm:justify-end">
+                {currentStep > 0
+                  ? <Button variant="secondary" onClick={previousStep} disabled={mutation.isPending}><FiArrowLeft /> Back</Button>
+                  : <span aria-hidden="true" />}
+                {currentStep < VISITOR_REGISTRATION_STEPS.length - 1
+                  ? <Button type="button" onClick={nextStep}>Continue <FiArrowRight /></Button>
+                  : <Button type="submit" className="col-span-2 sm:col-span-1" disabled={mutation.isPending}><FiSave /> {mutation.isPending ? "Uploading and registering..." : "Complete registration"}</Button>}
               </div>
             </div>
-          </form>
+          </div>
+        </form>
       </Card>
     </div>
   );

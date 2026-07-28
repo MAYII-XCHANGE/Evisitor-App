@@ -53,13 +53,13 @@ export const FrontDeskAppointmentsPage = () => {
   });
 
   const columns = useMemo(() => [
-    { header: "Visitor", accessor: (row) => <div><p className="font-semibold text-gray-900 dark:text-slate-100">{row.visitor}</p><p className="text-xs text-gray-500">{row.phoneNumber} · {row.company || "No company"}</p></div> },
+    { header: "Visitor Name", accessor: (row) => <div><p className="font-semibold text-gray-900 dark:text-slate-100">{row.visitor}</p><p className="text-xs text-gray-500">{row.phoneNumber} · {row.company || "No company"}</p></div> },
     { header: "Reference", accessor: "appointmentCode" },
     { header: "Host / Department", accessor: (row) => <div>{row.host}<p className="text-xs text-gray-500">{row.department}</p></div> },
-    { header: "Schedule", accessor: (row) => <div>{row.date}<p className="text-xs text-gray-500">{row.arrivalTime}</p></div> },
+    { header: "Date / Time", accessor: (row) => <div>{row.date}<p className="text-xs text-gray-500">{row.arrivalTime}</p></div> },
     { header: "Type", accessor: "visitorType", cell: titleCase },
     { header: "Status", accessor: "status", cell: (value) => <StatusBadge status={titleCase(value)} /> },
-    { header: "Actions", accessor: "id", cell: (_value, row) => {
+    { header: "Tag", accessor: "id", cell: (_value, row) => {
       const actionable = ["PENDING", "APPROVED"].includes(row.status);
       if (!actionable) return row.tagNumber ? <span className="font-semibold text-primary-700">{row.tagNumber}</span> : "—";
       return <div className="flex min-w-[210px] flex-wrap gap-2"><Button variant="secondary" className="px-3" onClick={() => setOperation({ type: "reschedule", appointment: row })}><FiClock /> Reschedule</Button><Button variant="danger" className="px-3" onClick={() => setOperation({ type: "no-show", appointment: row })}><FiUserX /> No-show</Button></div>;
@@ -70,7 +70,7 @@ export const FrontDeskAppointmentsPage = () => {
     <div className="space-y-6">
       <PageHeader title="Today's Appointments" description="Review today's scheduled visitors, reschedule appointments, and record no-shows." />
       <Card className="space-y-5">
-        <Input label="Search today's appointments" icon={FiSearch} value={search} onChange={(event) => { setSearch(event.target.value); pagination.resetPage(); }} placeholder="Visitor, phone, email, reference, host, or department" />
+        <Input label="Search today's appointments" icon={FiSearch} value={search} onChange={(event) => { setSearch(event.target.value); pagination.resetPage(); }} placeholder="Visitor name, tag, or reference" />
       </Card>
       <Card>{result.isLoading ? <TableSkeleton /> : result.error ? <ApiErrorState error={result.error} onRetry={result.refetch} /> : <><ResourceTable columns={columns} rows={result.data?.content} emptyTitle="No appointments found" emptyMessage="Appointments matching this view will appear here." /><Pagination page={result.data} onPageChange={pagination.setPage} /></>}</Card>
       <AppointmentOperationsModal operation={operation?.type} appointment={operation?.appointment} hostOptions={references.hostOptions} isPending={noShow.isPending || reschedule.isPending} onClose={() => setOperation(null)} onSubmit={(payload) => operation.type === "reschedule" ? reschedule.mutate({ appointment: operation.appointment, payload }) : noShow.mutate({ appointment: operation.appointment, payload })} />

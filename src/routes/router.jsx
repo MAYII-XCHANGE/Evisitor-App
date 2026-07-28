@@ -37,7 +37,8 @@ const secured = (allowedRoles, element) => <ProtectedRoute allowedRoles={allowed
 export const router = createBrowserRouter([
   { path: "/", element: <SelfServicePage /> },
   { path: "/self-service", element: <Navigate to="/" replace /> },
-  { path: "/login", element: <LoginPage /> },
+  { path: "/staff/login", element: <LoginPage /> },
+  { path: "/login", element: <Navigate to="/staff/login" replace /> },
   {
     element: <ProtectedRoute />,
     children: [{

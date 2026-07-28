@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="NOVA Visitor Management">
+  <defs>
+    <linearGradient id="nova-maskable-gradient" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#12bdf5"/>
+      <stop offset="1" stop-color="#008bc4"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#nova-maskable-gradient)"/>
+  <path d="M126 116h78l104 166V116h78v280h-78L204 230v166h-78V116Z" fill="#fff"/>
+  <path d="M204 116h54l128 204v76h-25L204 146v-30Z" fill="#282365" opacity=".9"/>
+</svg>

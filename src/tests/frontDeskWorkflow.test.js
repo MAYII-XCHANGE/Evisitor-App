@@ -15,6 +15,17 @@ test("registration uses the required six-step order and preserves form defaults"
   assert.equal(VISITOR_REGISTRATION_DEFAULTS.termsAccepted, false);
 });
 
+test("registration progress uses an accessible responsive breadcrumb stepper", () => {
+  const stepper = source("../features/visitors/VisitorRegistrationStepper.jsx");
+  const registration = source("../features/visitors/VisitorRegistrationPage.jsx");
+  assert.match(stepper, /aria-label="Visitor registration progress"/);
+  assert.match(stepper, /clipPath/);
+  assert.match(stepper, /aria-current=\{active \? "step"/);
+  assert.match(stepper, /Step \{currentStep \+ 1\} of \{steps\.length\}/);
+  assert.match(stepper, /lg:hidden/);
+  assert.match(registration, /max-w-\[1320px\]/);
+});
+
 test("manually entered host details and consent are required while capture and signature are optional", () => {
   assert.equal(visitorRegistrationRules.hostName.required, "Host name is required");
   assert.equal(visitorRegistrationRules.departmentName.required, "Host department is required");
@@ -22,6 +33,23 @@ test("manually entered host details and consent are required while capture and s
   assert.equal(visitorRegistrationRules.photograph.required, undefined);
   assert.equal(visitorRegistrationRules.signature.required, undefined);
   assert.match(visitorRegistrationRules.termsAccepted.required, /must be accepted/);
+});
+
+test("required registration fields display an accessible red asterisk", () => {
+  const input = source("../components/ui/Input.jsx");
+  const select = source("../components/ui/Select.jsx");
+  const details = source("../features/visitors/VisitorDetailsStep.jsx");
+  const visit = source("../features/visitors/VisitorVisitDetailsStep.jsx");
+  const identification = source("../features/visitors/VisitorIdentificationStep.jsx");
+  const review = source("../features/visitors/VisitorRegistrationReviewStep.jsx");
+  assert.match(input, /text-danger/);
+  assert.match(select, /text-danger/);
+  assert.match(input, /\(required\)/);
+  assert.match(details, /label="First name" required/);
+  assert.match(visit, /label="Host full name" required/);
+  assert.match(identification, /label="ID number" required/);
+  assert.match(review, /termsAccepted[\s\S]*text-danger/);
+  assert.doesNotMatch(details, /label="Email" required/);
 });
 
 test("camera and ID upload validation rejects unsupported or oversized files", () => {
@@ -37,14 +65,41 @@ test("Front Desk navigation exposes the authorized workflow entries including ch
   assert.deepEqual(keys, ["dashboard", "registerVisitor", "appointments", "visitors", "selfServiceRegistrations", "checkOut"]);
 });
 
+test("visitor checkout requires confirmation before the checkout API is called", () => {
+  const page = source("../features/visits/ActiveVisitsPage.jsx");
+  assert.match(page, /header: "Visitor tag", accessor: "tagNumber"/);
+  assert.doesNotMatch(page, /header: "Visit", accessor: "visitCode"/);
+  assert.match(page, /setCheckoutTarget\(visit\)/);
+  assert.match(page, /title="Confirm visitor checkout"/);
+  assert.match(page, /confirmText="Yes, check out visitor"/);
+  assert.match(page, /onConfirm=\{\(\) => checkout\.mutate\(checkoutTarget\.id\)\}/);
+  assert.match(page, /onCancel=\{\(\) => setCheckoutTarget\(null\)\}/);
+  assert.doesNotMatch(page, /onClick=\{\(\) => checkout\.mutate/);
+});
+
 test("self-service registration is public while its review queue is Front Desk protected", () => {
   const router = source("../routes/router.jsx");
   const service = source("../services/selfServiceService.js");
   const selfServicePage = source("../features/selfservice/SelfServicePage.jsx");
+  const staffRegistrationPage = source("../features/visitors/VisitorRegistrationPage.jsx");
   assert.match(router, /path: "\/", element: <SelfServicePage/);
   assert.match(router, /path: "\/self-service", element: <Navigate to="\/" replace/);
+  assert.match(router, /path: "\/staff\/login", element: <LoginPage/);
+  assert.match(router, /path: "\/login", element: <Navigate to="\/staff\/login" replace/);
   assert.match(router, /path: "self-service-registrations", element: secured\(reception/);
-  assert.match(selfServicePage, /to="\/login"/);
+  assert.match(selfServicePage, /to="\/staff\/login"/);
+  [
+    /max-w-\[1320px\]/,
+    /VisitorRegistrationStepper/,
+    /overflow-hidden !p-0/,
+    /min-h-\[420px\] max-w-5xl/,
+    /Required fields/,
+    /Clear form/,
+  ].forEach((pattern) => {
+    assert.match(staffRegistrationPage, pattern);
+    assert.match(selfServicePage, pattern);
+  });
+  assert.doesNotMatch(selfServicePage, /SelfServiceStepRail|SelfServiceBadgePreview/);
   assert.doesNotMatch(selfServicePage, /logout\(\)/);
   assert.match(service, /post\("\/self-service\/registrations"/);
   assert.match(service, /\/approve/);
@@ -84,6 +139,8 @@ test("appointment actions use backend operations", () => {
   assert.match(page, /frontDeskReschedule/);
   assert.match(page, /from: today, to: today/);
   assert.doesNotMatch(page, /Upcoming Appointments|confirmArrival/);
+  assert.match(page, /placeholder="Visitor name, tag, or reference"/);
+  assert.doesNotMatch(page, /phone, email|host, or department/);
 });
 
 test("table pagination is fixed at ten rows without a page-size selector", () => {
@@ -106,4 +163,27 @@ test("visitor search, filters, details, pagination, and export are connected", (
   assert.match(page, /VisitorDetailsModal/);
   assert.match(page, /exportCsv/);
   assert.match(page, /Pagination/);
+});
+
+test("successful self-service submissions appear in View All Visitors pending review", () => {
+  const selfServicePage = source("../features/selfservice/SelfServicePage.jsx");
+  const visitorsPage = source("../features/visitors/VisitorsPage.jsx");
+  const dashboardPage = source("../features/dashboard/DashboardPage.jsx");
+  const service = source("../services/selfServiceService.js");
+  assert.match(service, /self-service\/registrations\/options/);
+  assert.match(service, /self-service\/registrations\/reference/);
+  assert.match(service, /departmentId: values\.departmentId/);
+  assert.match(service, /branchId: values\.branchId/);
+  assert.match(selfServicePage, /selfServiceService\.options/);
+  assert.match(selfServicePage, /invalidateQueries\(\{ queryKey: \["self-service-registrations"\] \}\)/);
+  assert.match(visitorsPage, /selfServiceService\.list/);
+  assert.match(visitorsPage, /status: "PENDING_APPROVAL"/);
+  assert.match(visitorsPage, /refetchInterval: 5000/);
+  assert.match(visitorsPage, /Awaiting Front Desk Review/);
+  assert.match(visitorsPage, /SelfServiceReviewModal/);
+  assert.match(visitorsPage, /selfServiceService\.approve/);
+  assert.match(visitorsPage, /selfServiceService\.reject/);
+  assert.match(dashboardPage, /pendingSelfServiceRegistrations/);
+  assert.match(dashboardPage, /refetchInterval: canReviewSelfService \? 5000/);
+  assert.match(dashboardPage, /SelfServiceReviewModal/);
 });

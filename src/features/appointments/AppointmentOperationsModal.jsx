@@ -37,7 +37,7 @@ export const AppointmentOperationsModal = ({ operation, appointment, hostOptions
       title={rescheduling ? "Reschedule appointment" : "Mark visitor as no-show"}
       description={`${appointment.visitor} · ${appointment.appointmentCode}`}
       onClose={onClose}
-      footer={<><Button variant="secondary" onClick={onClose} disabled={isPending}>Cancel</Button><Button variant={rescheduling ? "primary" : "danger"} onClick={submit} disabled={isPending}>{isPending ? "Saving..." : rescheduling ? "Save new schedule" : "Mark no-show"}</Button></>}
+      footer={<><Button variant="secondary" onClick={onClose} disabled={isPending}>Cancel</Button><Button requiresOnline variant={rescheduling ? "primary" : "danger"} onClick={submit} disabled={isPending}>{isPending ? "Saving..." : rescheduling ? "Save new schedule" : "Mark no-show"}</Button></>}
     >
       <div className="space-y-4">
         {rescheduling && <><div className="grid gap-4 sm:grid-cols-2"><Input label="New date" type="date" min={new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)} value={date} onChange={(event) => setDate(event.target.value)} error={errors.date} /><Input label="New time" type="time" value={time} onChange={(event) => setTime(event.target.value)} error={errors.time} /></div><div className="grid gap-4 sm:grid-cols-2"><Select label="Host (optional change)" options={hostOptions} value={hostId} onChange={(event) => setHostId(event.target.value)} /><Input label="Department" value={hostOptions.find((host) => host.value === hostId)?.department || appointment.department || ""} readOnly /></div></>}

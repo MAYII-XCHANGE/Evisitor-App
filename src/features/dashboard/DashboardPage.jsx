@@ -1,6 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { FiArrowUpRight } from "react-icons/fi";
+import { FiArrowUpRight, FiEye } from "react-icons/fi";
+import toast from "react-hot-toast";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion as Motion } from "framer-motion";
 import { Card } from "../../components/ui/Card";
@@ -11,9 +13,12 @@ import { ApiErrorState } from "../../components/ui/ApiErrorState";
 import { Pagination } from "../../components/ui/Pagination";
 import { USER_ROLES } from "../../config/roles";
 import { dashboardService } from "../../services/dashboardService";
+import { selfServiceService } from "../../services/selfServiceService";
 import { useAuth } from "../../hooks/useAuth";
 import { usePagination } from "../../hooks/usePagination";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, titleCase } from "../../utils/formatters";
+import { getApiError } from "../../utils/apiResponse";
+import { SelfServiceReviewModal } from "../selfservice/SelfServiceReviewModal";
 
 const clientPage = (rows, page, size) => {
   const totalElements = rows.length;
@@ -24,16 +29,37 @@ const clientPage = (rows, page, size) => {
 };
 
 export const DashboardPage = () => {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const activePagination = usePagination();
+  const [reviewingRegistration, setReviewingRegistration] = useState(null);
   const { user } = useAuth();
   const isSuperAdmin = user?.role === USER_ROLES.SUPER_ADMIN;
   const isFrontDesk = user?.role === USER_ROLES.FRONTDESK;
   const hideRecentActivities = isFrontDesk || user?.role === USER_ROLES.SECURITY_OFFICER;
+  const canReviewSelfService = [USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK].includes(user?.role);
   const canOpenActiveVisitors = [USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK, USER_ROLES.SECURITY_OFFICER, USER_ROLES.AUDITOR].includes(user?.role);
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => dashboardService.get(),
+    refetchInterval: canReviewSelfService ? 5000 : false,
+  });
+  const refreshAfterReview = () => {
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    queryClient.invalidateQueries({ queryKey: ["self-service-registrations"] });
+    queryClient.invalidateQueries({ queryKey: ["visitors"] });
+    queryClient.invalidateQueries({ queryKey: ["active-visits"] });
+    setReviewingRegistration(null);
+  };
+  const approve = useMutation({
+    mutationFn: selfServiceService.approve,
+    onSuccess: () => { toast.success("Visitor approved and checked in"); refreshAfterReview(); },
+    onError: (requestError) => toast.error(getApiError(requestError).message),
+  });
+  const reject = useMutation({
+    mutationFn: ({ id, reason }) => selfServiceService.reject(id, reason),
+    onSuccess: () => { toast.success("Registration rejected"); refreshAfterReview(); },
+    onError: (requestError) => toast.error(getApiError(requestError).message),
   });
 
   if (isLoading) {
@@ -72,6 +98,45 @@ export const DashboardPage = () => {
           </Motion.div>
         ))}
       </div>
+
+      {canReviewSelfService && (
+        <Card>
+          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">Pending self-service registrations</h3>
+              <p className="mt-1 text-sm text-gray-500">Branch-scoped submissions waiting for Front Desk approval or rejection.</p>
+            </div>
+            <Button variant="secondary" onClick={() => navigate("/visitors")}>View all visitors</Button>
+          </div>
+          <div className="table-scroll overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-gray-500">
+                <tr>
+                  {["Reference", "Visitor", "Host / Department", "Branch", "Submitted", "Status", "Action"].map((heading) => (
+                    <th key={heading} className="border-b border-gray-100 bg-surface-muted px-4 py-3">{heading}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(data?.pendingSelfServiceRegistrations || []).map((registration) => (
+                  <tr key={registration.id}>
+                    <td className="border-b border-gray-100 px-4 py-4 font-semibold text-primary-700">{registration.reference}</td>
+                    <td className="border-b border-gray-100 px-4 py-4"><span className="font-semibold text-gray-900 dark:text-white">{registration.fullName}</span><span className="mt-1 block text-xs text-gray-500">{registration.phoneNumber}</span></td>
+                    <td className="border-b border-gray-100 px-4 py-4">{registration.hostName || "—"}<span className="mt-1 block text-xs text-gray-500">{registration.departmentName || "—"}</span></td>
+                    <td className="border-b border-gray-100 px-4 py-4">{registration.branchName}</td>
+                    <td className="border-b border-gray-100 px-4 py-4 text-gray-500">{formatDateTime(registration.submittedAt)}</td>
+                    <td className="border-b border-gray-100 px-4 py-4"><StatusBadge status={titleCase(registration.status)} /></td>
+                    <td className="border-b border-gray-100 px-4 py-4"><Button variant="secondary" className="px-3" onClick={() => setReviewingRegistration(registration)}><FiEye /> Review</Button></td>
+                  </tr>
+                ))}
+                {!(data?.pendingSelfServiceRegistrations || []).length && (
+                  <tr><td colSpan="7" className="px-4 py-10 text-center text-sm text-gray-500">No self-service registrations are waiting for this branch.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
         <Card>
@@ -166,6 +231,13 @@ export const DashboardPage = () => {
           </div>
         )}
       </div>
+      <SelfServiceReviewModal
+        registration={reviewingRegistration}
+        onClose={() => setReviewingRegistration(null)}
+        onApprove={(id) => approve.mutate(id)}
+        onReject={(id, reason) => reject.mutate({ id, reason })}
+        isLoading={approve.isPending || reject.isPending}
+      />
     </div>
   );
 };

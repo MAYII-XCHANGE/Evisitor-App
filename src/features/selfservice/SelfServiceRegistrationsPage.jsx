@@ -19,10 +19,10 @@ import { formatDateTime, titleCase } from "../../utils/formatters";
 import { getApiError } from "../../utils/apiResponse";
 import { SelfServiceReviewModal } from "./SelfServiceReviewModal";
 
-const STATUS_OPTIONS=[{value:"AWAITING_FRONTDESK",label:"Awaiting Front Desk"},{value:"APPROVED",label:"Approved"},{value:"REJECTED",label:"Rejected"}];
+const STATUS_OPTIONS=[{value:"PENDING_APPROVAL",label:"Pending Approval"},{value:"APPROVED",label:"Approved"},{value:"REJECTED",label:"Rejected"}];
 
 export const SelfServiceRegistrationsPage=()=>{
-  const queryClient=useQueryClient();const pagination=usePagination();const[search,setSearch]=useState("");const[status,setStatus]=useState("AWAITING_FRONTDESK");const[viewing,setViewing]=useState(null);const debounced=useDebouncedValue(search);
+  const queryClient=useQueryClient();const pagination=usePagination();const[search,setSearch]=useState("");const[status,setStatus]=useState("PENDING_APPROVAL");const[viewing,setViewing]=useState(null);const debounced=useDebouncedValue(search);
   const result=useQuery({queryKey:["self-service-registrations",pagination.page,pagination.size,status,debounced],queryFn:()=>selfServiceService.list({page:pagination.page,size:pagination.size,status,search:debounced})});
   const refresh=(updated)=>{queryClient.invalidateQueries({queryKey:["self-service-registrations"]});queryClient.invalidateQueries({queryKey:["visitors"]});queryClient.invalidateQueries({queryKey:["active-visits"]});queryClient.invalidateQueries({queryKey:["dashboard"]});setViewing(updated);};
   const approve=useMutation({mutationFn:selfServiceService.approve,onSuccess:(data)=>{toast.success("Visitor approved and checked in");refresh(data);},onError:(error)=>toast.error(getApiError(error).message)});

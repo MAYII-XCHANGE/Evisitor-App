@@ -87,8 +87,8 @@ export const VisitorRegistrationReviewStep = ({ values, onEdit, register, errors
         </div>
       </ReviewSection>
       <label className={`flex items-start gap-3 rounded-xl border p-4 ${errors.termsAccepted ? "border-danger bg-red-50" : "border-primary-100 bg-primary-50"}`}>
-        <input type="checkbox" className="mt-1 h-4 w-4" {...register("termsAccepted", { required: "Terms and Conditions must be accepted" })} />
-        <span className="text-sm text-gray-700">I confirm that the visitor has reviewed and accepted the current Terms and Conditions (version {values.termsVersion}).{errors.termsAccepted && <span className="mt-1 block text-danger">{errors.termsAccepted.message}</span>}</span>
+        <input type="checkbox" required aria-required="true" className="mt-1 h-4 w-4" {...register("termsAccepted", { required: "Terms and Conditions must be accepted" })} />
+        <span className="text-sm text-gray-700">I confirm that the visitor has reviewed and accepted the current Terms and Conditions (version {values.termsVersion}).<span className="ml-1 text-danger" aria-hidden="true">*</span><span className="sr-only"> (required)</span>{errors.termsAccepted && <span className="mt-1 block text-danger">{errors.termsAccepted.message}</span>}</span>
       </label>
     </div>
   </section>

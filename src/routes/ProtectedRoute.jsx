@@ -7,7 +7,7 @@ export const ProtectedRoute = ({ allowedRoles, children }) => {
   const { isAuthenticated, status, user } = useAuth();
 
   if (status === "loading") return <main className="p-8"><TableSkeleton /></main>;
-  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!isAuthenticated) return <Navigate to="/staff/login" replace state={{ from: location }} />;
   if (allowedRoles?.length && !allowedRoles.includes(user?.role)) return <Navigate to="/unauthorized" replace />;
   return children || <Outlet />;
 };

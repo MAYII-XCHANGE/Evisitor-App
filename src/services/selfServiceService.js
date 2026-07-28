@@ -14,7 +14,9 @@ export const selfServiceService = {
       visitorType: values.visitorType,
       purpose: values.purpose.trim(),
       hostName: values.hostName.trim(),
+      departmentId: values.departmentId || null,
       departmentName: values.departmentName.trim(),
+      branchId: values.branchId || null,
       branchName: values.branchName.trim(),
       appointmentDate: values.appointmentDate,
       appointmentTime: values.appointmentTime,
@@ -38,7 +40,9 @@ export const selfServiceService = {
     if (values.signature) body.append("signature", values.signature);
     return unwrapResponse(await apiClient.post("/self-service/registrations", body));
   },
-  list: async ({ page = 0, size = 10, status = "AWAITING_FRONTDESK", search = "" } = {}) =>
+  options: async () => unwrapResponse(await apiClient.get("/self-service/registrations/options")),
+  byReference: async (reference) => unwrapResponse(await apiClient.get(`/self-service/registrations/reference/${encodeURIComponent(reference)}`)),
+  list: async ({ page = 0, size = 10, status = "PENDING_APPROVAL", search = "" } = {}) =>
     unwrapResponse(await apiClient.get("/self-service/registrations", { params: { page, size, status, ...(search ? { search } : {}) } })),
   approve: async (id) => unwrapResponse(await apiClient.post(`/self-service/registrations/${id}/approve`)),
   reject: async (id, reason) => unwrapResponse(await apiClient.post(`/self-service/registrations/${id}/reject`, { reason })),

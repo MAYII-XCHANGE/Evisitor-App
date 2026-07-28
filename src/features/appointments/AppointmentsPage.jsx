@@ -42,7 +42,7 @@ export const AppointmentsPage = ({ approvalsOnly = false }) => {
     { header: "Date", accessor: (row) => `${row.date} ${row.arrivalTime}` },
     { header: "Status", accessor: "status", cell: (value) => <StatusBadge status={titleCase(value)} /> },
     ...(can(PERMISSIONS.DECIDE_APPOINTMENTS) ? [{
-      header: "Actions", accessor: "id", cell: (_value, row) => row.status === "PENDING" ? <div className="flex flex-wrap gap-2"><Button className="px-3" onClick={() => setDecision({ appointment: row, action: "approve" })}><FiCheck /> Approve</Button><Button variant="danger" className="px-3" onClick={() => setDecision({ appointment: row, action: "reject" })}><FiX /> Reject</Button><Button variant="secondary" className="px-3" disabled={cancel.isPending} onClick={() => cancel.mutate(row.id)}>Cancel</Button></div> : "—",
+      header: "Actions", accessor: "id", cell: (_value, row) => row.status === "PENDING" ? <div className="flex flex-wrap gap-2"><Button className="px-3" onClick={() => setDecision({ appointment: row, action: "approve" })}><FiCheck /> Approve</Button><Button variant="danger" className="px-3" onClick={() => setDecision({ appointment: row, action: "reject" })}><FiX /> Reject</Button><Button requiresOnline variant="secondary" className="px-3" disabled={cancel.isPending} onClick={() => cancel.mutate(row.id)}>Cancel</Button></div> : "—",
     }] : []),
   ];
   if (!approvalsOnly && user?.role === USER_ROLES.FRONTDESK) return <FrontDeskAppointmentsPage />;

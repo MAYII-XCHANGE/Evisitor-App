@@ -26,6 +26,13 @@ export const configureApiSession = ({ refresh, csrf, onUnauthorized }) => {
 const unsafeMethods = new Set(["post", "put", "patch", "delete"]);
 
 apiClient.interceptors.request.use((config) => {
+  const isUnsafeRequest = unsafeMethods.has(config.method?.toLowerCase());
+  if (isUnsafeRequest && typeof navigator !== "undefined" && !navigator.onLine) {
+    const error = new Error("You are offline. Reconnect before submitting this request.");
+    error.code = "ERR_NETWORK_OFFLINE";
+    error.isOffline = true;
+    return Promise.reject(error);
+  }
   if (!(config.data instanceof FormData) && !config.headers["Content-Type"]) {
     config.headers["Content-Type"] = "application/json";
   }

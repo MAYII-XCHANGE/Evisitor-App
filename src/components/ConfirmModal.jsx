@@ -1,4 +1,5 @@
 import { isValidElement } from "react";
+import { usePwa } from "../hooks/usePwa";
 
 const ConfirmModal = ({
   isOpen,
@@ -11,7 +12,9 @@ const ConfirmModal = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "primary",
+  requiresOnline = false,
 }) => {
+  const { isOnline } = usePwa();
   if (!isOpen) return null;
 
   const isTitleElement = isValidElement(title);
@@ -60,9 +63,10 @@ const ConfirmModal = ({
             type="button"
             className={`cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-4 ${confirmButtonClass}`}
             onClick={onConfirm}
-            disabled={isLoading}
+            disabled={isLoading || (requiresOnline && !isOnline)}
+            title={requiresOnline && !isOnline ? "Internet connection required" : undefined}
           >
-            {isLoading ? "Confirming..." : confirmText}
+            {requiresOnline && !isOnline ? "Internet connection required" : isLoading ? "Confirming..." : confirmText}
           </button>
         </div>
       </div>

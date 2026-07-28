@@ -18,7 +18,7 @@ const TopBanner = ({ toggleSidebar }) => {
   const handleLogOut = async () => {
     await logout();
     toast.success("Logged out successfully");
-    navigate("/login");
+    navigate("/", { replace: true });
   };
 
   return (

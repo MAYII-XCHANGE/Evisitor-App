@@ -19,8 +19,9 @@ Access and refresh tokens are held only in secure `HttpOnly` cookies issued by t
 
 ## Front Desk routes
 
-- `/` — public visitor self-registration landing page; any staff session on that device is cleared
-- `/login` — staff login, linked from the Self-Service landing page
+- `/` — public visitor self-registration landing page and PWA start screen
+- `/staff/login` — canonical staff login, linked from the Self-Service landing page
+- `/login` — legacy staff-login URL; redirects to `/staff/login`
 - `/dashboard` — existing Front Desk dashboard
 - `/visitors/register` — six-step walk-in registration and check-in
 - `/appointments` — today's searchable visitor appointments
@@ -34,5 +35,14 @@ Self-Service submissions remain separate from visitor and visit records until a 
 
 ```bash
 npm run lint
+npm test
 npm run build
 ```
+
+## Progressive Web App
+
+The portal remains a normal browser application and can optionally be installed as a PWA. The service worker precaches only the frontend application shell and versioned static assets. All `/api` traffic—including authentication, visitor data, files, reports, and mutations—uses the network and is never written to Cache Storage.
+
+Offline users can open the application shell and continue entering an already-open form, but submission and upload controls remain disabled until connectivity returns. Forms and visitor PII are not persisted in local storage, IndexedDB, or the service-worker cache. Application updates are user-confirmed so an unfinished registration is not reloaded unexpectedly.
+
+See [`docs/PWA.md`](docs/PWA.md) for caching, testing, update, and deployment details. An HTTPS same-origin Nginx example is available at [`deploy/nginx.conf.example`](deploy/nginx.conf.example).

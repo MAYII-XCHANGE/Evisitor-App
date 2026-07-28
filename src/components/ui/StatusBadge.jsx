@@ -1,6 +1,7 @@
 const statusStyles = {
   Approved: "bg-emerald-50 text-emerald-700 ring-emerald-100",
   Pending: "bg-amber-50 text-amber-700 ring-amber-100",
+  "Awaiting Front Desk": "bg-amber-50 text-amber-700 ring-amber-100",
   "Checked In": "bg-primary-50 text-primary-700 ring-primary-100",
   "Checked Out": "bg-slate-100 text-slate-700 ring-slate-200",
   Blacklisted: "bg-red-50 text-red-700 ring-red-100",
