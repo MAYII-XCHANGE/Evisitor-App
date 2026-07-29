@@ -33,6 +33,7 @@
   margin-top: 60px;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 20px;
   color: #ffffff;
   font-weight: 500;
@@ -67,11 +68,20 @@
 .sidebar-link {
   padding: 14px 8px;
   display: flex;
+  width: 100%;
   white-space: nowrap;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  text-align: left;
   cursor: pointer;
+}
+
+.sidebar-link > svg:first-child {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  flex: 0 0 20px;
 }
 
 .submenu-link {

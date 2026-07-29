@@ -74,11 +74,31 @@ test("camera and ID upload validation rejects unsupported or oversized files", (
   assert.equal(validatePhotograph({ type: "image/png", size: 1024 }), null);
 });
 
+test("visitor photograph upload uses protected storage and refreshes the frontend preview", () => {
+  const page = source("../features/visitors/VisitorPhotographPage.jsx");
+  const service = source("../services/visitorService.js");
+  assert.match(service, /\/visitors\/\$\{id\}\/photograph/);
+  assert.match(page, /storedFile\.url/);
+  assert.match(page, /Image ID: \{uploadedFile\.id\}/);
+  assert.match(page, /apiAssetUrl\(storedPath\)/);
+  assert.match(page, /crossOrigin=\{localPreview \? undefined : "use-credentials"\}/);
+  assert.match(page, /invalidateQueries\(\{ queryKey: \["visitors"\] \}\)/);
+  assert.match(page, /storage folders are created automatically by the server/i);
+});
+
 test("Front Desk navigation exposes the authorized workflow entries including checkout", () => {
   const navigation = source("../config/navigation.js");
   const frontDesk = navigation.match(/\[USER_ROLES\.FRONTDESK\]: \[([\s\S]*?)\n {2}\],/)[1];
   const keys = [...frontDesk.matchAll(/MENU_ITEMS\.([A-Za-z]+)/g)].map((match) => match[1]);
   assert.deepEqual(keys, ["dashboard", "registerVisitor", "appointments", "visitors", "selfServiceRegistrations", "physicalTags", "checkOut"]);
+});
+
+test("sidebar menu icons use a fixed left-aligned column", () => {
+  const sidebar = source("../components/SideBar/SideBar.css");
+  assert.match(sidebar, /\.sidebar-link\s*\{[\s\S]*?width:\s*100%/);
+  assert.match(sidebar, /\.sidebar-link\s*\{[\s\S]*?justify-content:\s*flex-start/);
+  assert.match(sidebar, /\.sidebar-link\s*>\s*svg:first-child\s*\{[\s\S]*?flex:\s*0 0 20px/);
+  assert.doesNotMatch(sidebar, /\.sidebar-link\s*\{[\s\S]*?justify-content:\s*center/);
 });
 
 test("visitor checkout requires confirmation before the checkout API is called", () => {

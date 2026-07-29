@@ -1,4 +1,4 @@
-const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8077/api";
 
 export const apiAssetUrl = (path) => {
   if (!path) return "";
