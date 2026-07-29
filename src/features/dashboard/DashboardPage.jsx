@@ -37,7 +37,7 @@ export const DashboardPage = () => {
   const isSuperAdmin = user?.role === USER_ROLES.SUPER_ADMIN;
   const isFrontDesk = user?.role === USER_ROLES.FRONTDESK;
   const hideRecentActivities = isFrontDesk || user?.role === USER_ROLES.SECURITY_OFFICER;
-  const canReviewSelfService = [USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK].includes(user?.role);
+  const canReviewSelfService = user?.role === USER_ROLES.FRONTDESK;
   const canOpenActiveVisitors = [USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK, USER_ROLES.SECURITY_OFFICER, USER_ROLES.AUDITOR].includes(user?.role);
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboard"],
@@ -231,13 +231,13 @@ export const DashboardPage = () => {
           </div>
         )}
       </div>
-      <SelfServiceReviewModal
-        registration={reviewingRegistration}
-        onClose={() => setReviewingRegistration(null)}
-        onApprove={(id) => approve.mutate(id)}
-        onReject={(id, reason) => reject.mutate({ id, reason })}
-        isLoading={approve.isPending || reject.isPending}
-      />
+      {canReviewSelfService && <SelfServiceReviewModal
+          registration={reviewingRegistration}
+          onClose={() => setReviewingRegistration(null)}
+          onApprove={(id, physicalTagId) => approve.mutate({ id, physicalTagId })}
+          onReject={(id, reason) => reject.mutate({ id, reason })}
+          isLoading={approve.isPending || reject.isPending}
+        />}
     </div>
   );
 };

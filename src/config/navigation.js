@@ -16,6 +16,7 @@ import {
   FiSearch,
   FiSettings,
   FiShield,
+  FiTag,
   FiTrendingUp,
   FiUserPlus,
   FiUsers,
@@ -50,6 +51,7 @@ export const MENU_ITEMS = {
   logs: { label: "Audit Logs", path: "/audit-logs", icon: FiActivity },
   visitorHistory: { label: "Visitor History", path: "/visitor-history", icon: FiClock },
   settings: { label: "Settings", path: "/settings", icon: FiSettings },
+  physicalTags: { label: "Physical Tags", path: "/physical-tags", icon: FiTag },
 };
 
 export const roleMenuItems = {
@@ -58,6 +60,7 @@ export const roleMenuItems = {
     MENU_ITEMS.users,
     MENU_ITEMS.branches,
     MENU_ITEMS.departments,
+    MENU_ITEMS.physicalTags,
     //MENU_ITEMS.analytics,
     //MENU_ITEMS.reports,
     //MENU_ITEMS.blacklist,
@@ -72,13 +75,15 @@ export const roleMenuItems = {
     //MENU_ITEMS.checkOut,
     MENU_ITEMS.branchReports,
     MENU_ITEMS.blacklist,
+    MENU_ITEMS.physicalTags,
   ],
   [USER_ROLES.FRONTDESK]: [
     MENU_ITEMS.dashboard,
     MENU_ITEMS.registerVisitor,
     MENU_ITEMS.appointments,
     MENU_ITEMS.visitors,
-    //MENU_ITEMS.selfServiceRegistrations,
+    MENU_ITEMS.selfServiceRegistrations,
+    MENU_ITEMS.physicalTags,
     MENU_ITEMS.checkOut,
   ],
   [USER_ROLES.EMPLOYEE_HOST]: [

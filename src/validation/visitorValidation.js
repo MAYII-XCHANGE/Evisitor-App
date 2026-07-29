@@ -1,8 +1,20 @@
+export const NIGERIAN_PHONE_PATTERN = /^(?:\+234|0)[789]\d{9}$/;
+export const NIGERIAN_PHONE_ERROR = "Use +2349059773535 or 09059773535";
+
+export const sanitizeNigerianPhoneInput = (value = "") => {
+  const hasCountryCode = value.startsWith("+");
+  const digits = value.replace(/\D/g, "");
+  return `${hasCountryCode ? "+" : ""}${digits}`.slice(0, hasCountryCode ? 14 : 11);
+};
+
 export const visitorRegistrationRules = {
   firstName: { required: "First name is required" },
   lastName: { required: "Last name is required" },
   visitorName: { required: "Full name is required", minLength: { value: 2, message: "Enter the visitor's full name" } },
-  phoneNumber: { required: "Phone number is required", minLength: { value: 7, message: "Enter a valid phone number" } },
+  phoneNumber: {
+    required: "Phone number is required",
+    pattern: { value: NIGERIAN_PHONE_PATTERN, message: NIGERIAN_PHONE_ERROR },
+  },
   email: { pattern: { value: /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email address" } },
   idType: { required: "ID type is required" },
   idNumber: { required: "ID number is required" },
@@ -19,6 +31,7 @@ export const visitorRegistrationRules = {
   visitorType: { required: "Visitor type is required" },
   appointmentDate: { required: "Appointment date is required" },
   appointmentTime: { required: "Appointment time is required" },
+  physicalTagId: { required: "Select an available physical visitor tag" },
   photograph: {},
   signature: {},
   termsAccepted: { required: "Terms and Conditions must be accepted" },

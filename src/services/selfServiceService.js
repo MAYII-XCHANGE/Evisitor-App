@@ -44,6 +44,6 @@ export const selfServiceService = {
   byReference: async (reference) => unwrapResponse(await apiClient.get(`/self-service/registrations/reference/${encodeURIComponent(reference)}`)),
   list: async ({ page = 0, size = 10, status = "PENDING_APPROVAL", search = "" } = {}) =>
     unwrapResponse(await apiClient.get("/self-service/registrations", { params: { page, size, status, ...(search ? { search } : {}) } })),
-  approve: async (id) => unwrapResponse(await apiClient.post(`/self-service/registrations/${id}/approve`)),
+  approve: async ({ id, physicalTagId }) => unwrapResponse(await apiClient.post(`/self-service/registrations/${id}/approve`, { physicalTagId })),
   reject: async (id, reason) => unwrapResponse(await apiClient.post(`/self-service/registrations/${id}/reject`, { reason })),
 };

@@ -26,6 +26,10 @@ import "./SelfServicePage.css";
 const localDate = () => { const now = new Date(); const offset = now.getTimezoneOffset() * 60000; return new Date(now.getTime() - offset).toISOString().slice(0, 10); };
 const localTime = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
 const defaults = () => ({ ...VISITOR_REGISTRATION_DEFAULTS, appointmentDate: localDate(), appointmentTime: localTime(), website: "" });
+const SELF_SERVICE_REGISTRATION_STEPS = VISITOR_REGISTRATION_STEPS.map((step) => ({
+  ...step,
+  fields: step.fields.filter((field) => field !== "physicalTagId"),
+}));
 
 export const SelfServicePage = () => {
   const queryClient = useQueryClient();
@@ -77,13 +81,13 @@ export const SelfServicePage = () => {
     onError: (error) => {
       const apiError = getApiError(error);
       Object.entries(apiError.fieldErrors).forEach(([field, message]) => setError(field, { message }));
-      const errorStep = VISITOR_REGISTRATION_STEPS.findIndex((step) => step.fields.some((field) => apiError.fieldErrors[field]));
+      const errorStep = SELF_SERVICE_REGISTRATION_STEPS.findIndex((step) => step.fields.some((field) => apiError.fieldErrors[field]));
       if (errorStep >= 0) setCurrentStep(errorStep);
       setError("root", { message: apiError.message });
     },
   });
 
-  const nextStep = async () => { clearErrors("root"); if (await trigger(VISITOR_REGISTRATION_STEPS[currentStep].fields, { shouldFocus: true })) setCurrentStep((step) => Math.min(step + 1, VISITOR_REGISTRATION_STEPS.length - 1)); };
+  const nextStep = async () => { clearErrors("root"); if (await trigger(SELF_SERVICE_REGISTRATION_STEPS[currentStep].fields, { shouldFocus: true })) setCurrentStep((step) => Math.min(step + 1, SELF_SERVICE_REGISTRATION_STEPS.length - 1)); };
   const previousStep = () => { clearErrors("root"); setCurrentStep((step) => Math.max(step - 1, 0)); };
   const stepContent = [
     <VisitorDetailsStep key="visitor" register={register} errors={errors} />,
@@ -96,11 +100,12 @@ export const SelfServicePage = () => {
       onBranchChange={changeBranch}
       onDepartmentChange={changeDepartment}
       locationOptionsLoading={optionsQuery.isLoading}
+      showPhysicalTag={false}
     />,
     <VisitorIdentificationStep key="identification" register={register} errors={errors} idDocument={values.idDocument} onIdDocumentChange={(file) => setValue("idDocument", file, { shouldDirty: true })} />,
     <VisitorCaptureStep key="capture" photograph={values.photograph} signature={values.signature} onPhotographChange={(file) => setValue("photograph", file, { shouldDirty: true, shouldValidate: true })} onSignatureChange={(file) => setValue("signature", file, { shouldDirty: true, shouldValidate: true })} errors={errors} />,
     <VisitorAdditionalInfoStep key="additional" control={control} register={register} errors={errors} />,
-    <VisitorRegistrationReviewStep key="review" values={values} onEdit={setCurrentStep} register={register} errors={errors} />,
+    <VisitorRegistrationReviewStep key="review" values={values} onEdit={setCurrentStep} register={register} errors={errors} showPhysicalTag={false} />,
   ];
 
   if (success) {
@@ -110,6 +115,7 @@ export const SelfServicePage = () => {
           <FiCheckCircle className="mx-auto h-14 w-14 text-green-600" />
           <h1 className="mt-5 text-2xl font-bold text-gray-900">Registration submitted</h1>
           <p className="mt-3 text-gray-600">Please go to the Front Desk for verification and check-in.</p>
+          <p className="mt-2 text-sm text-gray-500">A Front Desk officer will assign your physical visitor tag during approval.</p>
           <div className="mx-auto mt-6 max-w-sm rounded-xl bg-primary-50 p-4">
             <p className="text-xs font-bold uppercase tracking-wide text-primary-600">Reference</p>
             <p className="mt-1 text-xl font-bold text-primary-900">{success.reference}</p>
@@ -135,14 +141,14 @@ export const SelfServicePage = () => {
           <Card className="overflow-hidden !p-0">
             <div className="border-b border-primary-100 bg-gradient-to-r from-primary-50 via-white to-primary-50/40 px-5 py-5 sm:px-8 dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
               <VisitorRegistrationStepper
-                steps={VISITOR_REGISTRATION_STEPS}
+                steps={SELF_SERVICE_REGISTRATION_STEPS}
                 currentStep={currentStep}
                 onStepSelect={setCurrentStep}
               />
             </div>
 
             <form
-              onSubmit={currentStep === VISITOR_REGISTRATION_STEPS.length - 1
+              onSubmit={currentStep === SELF_SERVICE_REGISTRATION_STEPS.length - 1
                 ? handleSubmit((data) => mutation.mutate(data))
                 : (event) => { event.preventDefault(); nextStep(); }}
               noValidate
@@ -175,7 +181,7 @@ export const SelfServicePage = () => {
                     {currentStep > 0
                       ? <Button variant="secondary" onClick={previousStep} disabled={mutation.isPending}><FiArrowLeft /> Back</Button>
                       : <span aria-hidden="true" />}
-                    {currentStep < VISITOR_REGISTRATION_STEPS.length - 1
+                    {currentStep < SELF_SERVICE_REGISTRATION_STEPS.length - 1
                       ? <Button type="button" onClick={nextStep}>Continue <FiArrowRight /></Button>
                       : (
                         <Button type="submit" className="col-span-2 sm:col-span-1" disabled={mutation.isPending}>

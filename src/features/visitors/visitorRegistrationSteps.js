@@ -7,7 +7,7 @@ export const VISITOR_REGISTRATION_STEPS = [
   {
     title: "Host & visit",
     description: "Host, department, date, and time",
-    fields: ["hostName", "departmentName", "branchName", "appointmentDate", "appointmentTime"],
+    fields: ["hostName", "departmentName", "branchName", "appointmentDate", "appointmentTime", "physicalTagId"],
   },
   {
     title: "Identification",
@@ -47,6 +47,7 @@ export const VISITOR_REGISTRATION_DEFAULTS = {
   branchName: "",
   appointmentDate: "",
   appointmentTime: "",
+  physicalTagId: "",
   idType: "NATIONAL_ID",
   idNumber: "",
   idDocument: null,

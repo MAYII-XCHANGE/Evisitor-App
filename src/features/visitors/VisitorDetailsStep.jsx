@@ -1,6 +1,6 @@
 import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
-import { VISITOR_TYPE_OPTIONS, visitorRegistrationRules } from "../../validation/visitorValidation";
+import { sanitizeNigerianPhoneInput, VISITOR_TYPE_OPTIONS, visitorRegistrationRules } from "../../validation/visitorValidation";
 
 export const VisitorDetailsStep = ({ register, errors }) => (
   <section aria-labelledby="visitor-details-heading">
@@ -9,7 +9,18 @@ export const VisitorDetailsStep = ({ register, errors }) => (
     <div className="mt-6 grid gap-5 md:grid-cols-2">
       <Input label="First name" required autoComplete="given-name" error={errors.firstName?.message} {...register("firstName", visitorRegistrationRules.firstName)} />
       <Input label="Last name" required autoComplete="family-name" error={errors.lastName?.message} {...register("lastName", visitorRegistrationRules.lastName)} />
-      <Input label="Phone number" required type="tel" autoComplete="tel" error={errors.phoneNumber?.message} {...register("phoneNumber", visitorRegistrationRules.phoneNumber)} />
+      <Input
+        label="Phone number"
+        required
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel"
+        maxLength={14}
+        placeholder="+2349059773535 or 09059773535"
+        error={errors.phoneNumber?.message}
+        onInput={(event) => { event.currentTarget.value = sanitizeNigerianPhoneInput(event.currentTarget.value); }}
+        {...register("phoneNumber", visitorRegistrationRules.phoneNumber)}
+      />
       <Input label="Email" type="email" autoComplete="email" error={errors.email?.message} {...register("email", visitorRegistrationRules.email)} />
       <Input label="Company / organisation" autoComplete="organization" {...register("company")} />
       <Select label="Visitor type" required options={VISITOR_TYPE_OPTIONS} error={errors.visitorType?.message} {...register("visitorType", visitorRegistrationRules.visitorType)} />

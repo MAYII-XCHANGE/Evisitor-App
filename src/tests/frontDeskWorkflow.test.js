@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { VISITOR_REGISTRATION_DEFAULTS, VISITOR_REGISTRATION_STEPS } from "../features/visitors/visitorRegistrationSteps.js";
-import { validatePhotograph, visitorRegistrationRules } from "../validation/visitorValidation.js";
+import {
+  sanitizeNigerianPhoneInput,
+  validatePhotograph,
+  visitorRegistrationRules,
+} from "../validation/visitorValidation.js";
 
 const source = (relativePath) => readFileSync(new URL(relativePath, import.meta.url), "utf8");
 
@@ -35,6 +39,18 @@ test("manually entered host details and consent are required while capture and s
   assert.match(visitorRegistrationRules.termsAccepted.required, /must be accepted/);
 });
 
+test("phone numbers are limited to Nigerian local or international format", () => {
+  const phonePattern = visitorRegistrationRules.phoneNumber.pattern.value;
+  assert.equal(phonePattern.test("+2349059773535"), true);
+  assert.equal(phonePattern.test("09059773535"), true);
+  assert.equal(phonePattern.test("+234905977353"), false);
+  assert.equal(phonePattern.test("0905977353"), false);
+  assert.equal(phonePattern.test("0905-977-3535"), false);
+  assert.equal(phonePattern.test("12345678901"), false);
+  assert.equal(sanitizeNigerianPhoneInput("+234 905-977-3535 extra"), "+2349059773535");
+  assert.equal(sanitizeNigerianPhoneInput("0905 977 353599"), "09059773535");
+});
+
 test("required registration fields display an accessible red asterisk", () => {
   const input = source("../components/ui/Input.jsx");
   const select = source("../components/ui/Select.jsx");
@@ -62,7 +78,7 @@ test("Front Desk navigation exposes the authorized workflow entries including ch
   const navigation = source("../config/navigation.js");
   const frontDesk = navigation.match(/\[USER_ROLES\.FRONTDESK\]: \[([\s\S]*?)\n {2}\],/)[1];
   const keys = [...frontDesk.matchAll(/MENU_ITEMS\.([A-Za-z]+)/g)].map((match) => match[1]);
-  assert.deepEqual(keys, ["dashboard", "registerVisitor", "appointments", "visitors", "selfServiceRegistrations", "checkOut"]);
+  assert.deepEqual(keys, ["dashboard", "registerVisitor", "appointments", "visitors", "selfServiceRegistrations", "physicalTags", "checkOut"]);
 });
 
 test("visitor checkout requires confirmation before the checkout API is called", () => {
@@ -71,10 +87,13 @@ test("visitor checkout requires confirmation before the checkout API is called",
   assert.doesNotMatch(page, /header: "Visit", accessor: "visitCode"/);
   assert.match(page, /setCheckoutTarget\(visit\)/);
   assert.match(page, /title="Confirm visitor checkout"/);
-  assert.match(page, /confirmText="Yes, check out visitor"/);
-  assert.match(page, /onConfirm=\{\(\) => checkout\.mutate\(checkoutTarget\.id\)\}/);
-  assert.match(page, /onCancel=\{\(\) => setCheckoutTarget\(null\)\}/);
-  assert.doesNotMatch(page, /onClick=\{\(\) => checkout\.mutate/);
+  assert.match(page, /label="Physical-tag return status"/);
+  assert.match(page, /physicalTagReturnStatus: returnStatus/);
+  assert.match(page, /physicalTagComment: tagComment/);
+  assert.match(page, /"RETURNED"/);
+  assert.match(page, /"LOST"/);
+  assert.match(page, /"DAMAGED"/);
+  assert.match(page, /"NOT_RETURNED"/);
 });
 
 test("self-service registration is public while its review queue is Front Desk protected", () => {
@@ -86,7 +105,7 @@ test("self-service registration is public while its review queue is Front Desk p
   assert.match(router, /path: "\/self-service", element: <Navigate to="\/" replace/);
   assert.match(router, /path: "\/staff\/login", element: <LoginPage/);
   assert.match(router, /path: "\/login", element: <Navigate to="\/staff\/login" replace/);
-  assert.match(router, /path: "self-service-registrations", element: secured\(reception/);
+  assert.match(router, /path: "self-service-registrations", element: secured\(frontDeskOnly/);
   assert.match(selfServicePage, /to="\/staff\/login"/);
   [
     /max-w-\[1320px\]/,
@@ -104,6 +123,30 @@ test("self-service registration is public while its review queue is Front Desk p
   assert.match(service, /post\("\/self-service\/registrations"/);
   assert.match(service, /\/approve/);
   assert.match(service, /\/reject/);
+});
+
+test("physical visitor tags are required at check-in and have a management workflow", () => {
+  const visitStep = source("../features/visitors/VisitorVisitDetailsStep.jsx");
+  const registration = source("../features/visitors/VisitorRegistrationPage.jsx");
+  const selfService = source("../features/selfservice/SelfServicePage.jsx");
+  const selfServiceApi = source("../services/selfServiceService.js");
+  const reviewModal = source("../features/selfservice/SelfServiceReviewModal.jsx");
+  const management = source("../features/physicaltags/PhysicalTagsPage.jsx");
+  const service = source("../services/physicalTagService.js");
+  assert.match(visitStep, /PhysicalTagSelect/);
+  assert.match(registration, /physicalTagId: formValues\.physicalTagId/);
+  assert.match(selfService, /showPhysicalTag=\{false\}/);
+  assert.match(selfService, /field !== "physicalTagId"/);
+  assert.doesNotMatch(selfServiceApi.match(/const request = \{[\s\S]*?\n\s{4}\};/)?.[0] || "", /physicalTagId/);
+  assert.match(reviewModal, /PhysicalTagSelect/);
+  assert.match(reviewModal, /onApprove\(registration\.id,physicalTagId\)/);
+  assert.match(selfServiceApi, /\/approve.*physicalTagId/s);
+  assert.match(management, /Physical Tag Management/);
+  assert.match(management, /Mark lost/);
+  assert.match(management, /Mark damaged/);
+  assert.match(management, /History/);
+  assert.match(service, /\/physical-tags\/available/);
+  assert.match(service, /\/physical-tags\/\$\{id\}\/history/);
 });
 
 test("authenticated browser sessions are restored safely after a page reload", () => {
@@ -162,6 +205,11 @@ test("visitor search, filters, details, pagination, and export are connected", (
   assert.match(page, /checkInFrom/);
   assert.match(page, /VisitorDetailsModal/);
   assert.match(page, /exportCsv/);
+  assert.match(page, /label="Registered from"/);
+  assert.match(page, /label="Registered to"/);
+  assert.match(page, /Export current CSV/);
+  assert.match(page, /Export all CSV/);
+  assert.match(page, /visitorService\.exportCsv\(all \? \{\} : params\)/);
   assert.match(page, /Pagination/);
 });
 

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import ConfirmModal from "../../components/ConfirmModal";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
+import { Modal } from "../../components/ui/Modal";
+import { Select } from "../../components/ui/Select";
 import { ResourceTable } from "../../components/ui/ResourceTable";
 import { Pagination } from "../../components/ui/Pagination";
 import { StatusBadge } from "../../components/ui/StatusBadge";
@@ -22,19 +23,25 @@ export const ActiveVisitsPage = ({ checkoutMode = false }) => {
   const queryClient = useQueryClient();
   const pagination = usePagination();
   const [checkoutTarget, setCheckoutTarget] = useState(null);
+  const [returnStatus, setReturnStatus] = useState("RETURNED");
+  const [tagComment, setTagComment] = useState("");
   const result = useQuery({ queryKey: ["active-visits", pagination.page, pagination.size], queryFn: () => visitService.active(pagination) });
   const checkout = useMutation({
-    mutationFn: (id) => visitService.checkOut(id),
+    mutationFn: ({ id, payload }) => visitService.checkOut(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-visits"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["physical-tags"] });
       toast.success("Visitor checked out");
       setCheckoutTarget(null);
+      setReturnStatus("RETURNED");
+      setTagComment("");
     },
     onError: (error) => toast.error(getApiError(error).message),
   });
   const columns = [
     { header: "Visitor tag", accessor: "tagNumber", cell: (value) => <span className="font-semibold text-primary-700">{value || "—"}</span> },
+    { header: "Physical tag", accessor: "physicalTagCode", cell: (value) => <span className="font-semibold text-emerald-700">{value || "—"}</span> },
     { header: "Visitor", accessor: "visitor" },
     { header: "Company", accessor: "company" },
     { header: "Host", accessor: "host" },
@@ -50,7 +57,7 @@ export const ActiveVisitsPage = ({ checkoutMode = false }) => {
           variant="danger"
           className="px-3"
           disabled={checkout.isPending}
-          onClick={() => setCheckoutTarget(visit)}
+          onClick={() => { setCheckoutTarget(visit); setReturnStatus("RETURNED"); setTagComment(""); }}
         >
           Check out
         </Button>
@@ -72,18 +79,61 @@ export const ActiveVisitsPage = ({ checkoutMode = false }) => {
               </>
             )}
       </Card>
-      <ConfirmModal
-        requiresOnline
+      <Modal
         isOpen={Boolean(checkoutTarget)}
         title="Confirm visitor checkout"
-        message={`Are you sure you want to check out ${checkoutTarget?.visitor || "this visitor"}${checkoutTarget?.tagNumber ? ` (${checkoutTarget.tagNumber})` : ""}? This will end their active visit.`}
-        confirmText="Yes, check out visitor"
-        cancelText="Cancel"
-        variant="danger"
-        isLoading={checkout.isPending}
-        onCancel={() => setCheckoutTarget(null)}
-        onConfirm={() => checkout.mutate(checkoutTarget.id)}
-      />
+        description={`Record the return status of physical tag ${checkoutTarget?.physicalTagCode || "—"} before checking out ${checkoutTarget?.visitor || "this visitor"}.`}
+        onClose={() => setCheckoutTarget(null)}
+        footer={(
+          <>
+            <Button variant="secondary" onClick={() => setCheckoutTarget(null)} disabled={checkout.isPending}>Cancel</Button>
+            <Button
+              variant="danger"
+              requiresOnline
+              disabled={checkout.isPending || (["LOST", "DAMAGED"].includes(returnStatus) && !tagComment.trim())}
+              onClick={() => checkout.mutate({
+                id: checkoutTarget.id,
+                payload: { notes: "", physicalTagReturnStatus: returnStatus, physicalTagComment: tagComment.trim() || null },
+              })}
+            >
+              {checkout.isPending ? "Checking out..." : "Confirm checkout"}
+            </Button>
+          </>
+        )}
+      >
+        <div className="space-y-4">
+          <div className="rounded-xl bg-primary-50 p-4 text-sm text-primary-800">
+            <p><strong>System tag:</strong> {checkoutTarget?.tagNumber || "—"}</p>
+            <p className="mt-1"><strong>Physical tag:</strong> {checkoutTarget?.physicalTagCode || "—"}</p>
+          </div>
+          <Select
+            label="Physical-tag return status"
+            required
+            value={returnStatus}
+            onChange={(event) => setReturnStatus(event.target.value)}
+            options={[
+              { value: "RETURNED", label: "Returned" },
+              { value: "LOST", label: "Lost" },
+              { value: "DAMAGED", label: "Damaged" },
+              { value: "NOT_RETURNED", label: "Not yet returned" },
+            ]}
+          />
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-gray-700">
+              Reason or comment{["LOST", "DAMAGED"].includes(returnStatus) && <span className="ml-1 text-danger">*</span>}
+            </span>
+            <textarea
+              rows="3"
+              maxLength="1000"
+              value={tagComment}
+              onChange={(event) => setTagComment(event.target.value)}
+              placeholder={returnStatus === "NOT_RETURNED" ? "Add follow-up details" : "Add a comment"}
+              className="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
+            />
+          </label>
+          {returnStatus === "NOT_RETURNED" && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-700">The visit will close, but the physical tag remains assigned and appears in “Awaiting Tag Return”.</p>}
+        </div>
+      </Modal>
     </div>
   );
 };

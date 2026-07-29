@@ -36,7 +36,7 @@ const ReviewSection = ({ title, onEdit, children }) => (
   </section>
 );
 
-export const VisitorRegistrationReviewStep = ({ values, onEdit, register, errors }) => (
+export const VisitorRegistrationReviewStep = ({ values, onEdit, register, errors, showPhysicalTag = true }) => (
   <section>
     <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Review and consent</h2>
     <p className="mt-1 text-sm text-gray-500">Confirm all information before completing registration.</p>
@@ -58,6 +58,7 @@ export const VisitorRegistrationReviewStep = ({ values, onEdit, register, errors
           <ReviewItem label="Branch" value={values.branchName} />
           <ReviewItem label="Date" value={values.appointmentDate} />
           <ReviewItem label="Time" value={values.appointmentTime} />
+          {showPhysicalTag && <ReviewItem label="Physical tag selected" value={values.physicalTagId ? "Selected and reserved on completion" : null} />}
         </dl>
       </ReviewSection>
       <ReviewSection title="Identification" onEdit={() => onEdit(2)}>

@@ -25,10 +25,12 @@ import { AuditLogsPage } from "../features/reports/AuditLogsPage";
 import { AnalyticsPage } from "../features/reports/AnalyticsPage";
 import { SelfServicePage } from "../features/selfservice/SelfServicePage";
 import { SelfServiceRegistrationsPage } from "../features/selfservice/SelfServiceRegistrationsPage";
+import { PhysicalTagsPage } from "../features/physicaltags/PhysicalTagsPage";
 
 const roles = (...values) => values;
 const visitorReaders = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK, USER_ROLES.SECURITY_OFFICER, USER_ROLES.AUDITOR);
 const reception = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK);
+const frontDeskOnly = roles(USER_ROLES.FRONTDESK);
 const appointmentUsers = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK, USER_ROLES.EMPLOYEE_HOST);
 const reportUsers = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.AUDITOR);
 
@@ -45,7 +47,7 @@ export const router = createBrowserRouter([
       element: <DashboardLayout />,
       children: [
         { path: "dashboard", element: secured(ALL_ROLES, <DashboardPage />) },
-        { path: "visitors/register", element: secured(reception, <VisitorRegistrationPage />) },
+        { path: "visitors/register", element: secured(frontDeskOnly, <VisitorRegistrationPage />) },
         { path: "visitors", element: secured(visitorReaders, <VisitorsPage />) },
         { path: "visitor-search", element: secured(visitorReaders, <VisitorsPage />) },
         { path: "visitors/photograph", element: secured(reception, <VisitorPhotographPage />) },
@@ -53,8 +55,9 @@ export const router = createBrowserRouter([
         { path: "appointments", element: secured(appointmentUsers, <AppointmentsPage />) },
         { path: "visitor-approvals", element: secured(roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.EMPLOYEE_HOST), <AppointmentsPage approvalsOnly />) },
         { path: "expected-visitors", element: secured(roles(USER_ROLES.EMPLOYEE_HOST), <ExpectedVisitorsPage />) },
-        { path: "visitors/check-out", element: secured(reception, <ActiveVisitsPage checkoutMode />) },
-        { path: "self-service-registrations", element: secured(reception, <SelfServiceRegistrationsPage />) },
+        { path: "visitors/check-out", element: secured(frontDeskOnly, <ActiveVisitsPage checkoutMode />) },
+        { path: "self-service-registrations", element: secured(frontDeskOnly, <SelfServiceRegistrationsPage />) },
+        { path: "physical-tags", element: secured(roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK), <PhysicalTagsPage />) },
         { path: "active-visitors", element: secured(roles(...reception, USER_ROLES.SECURITY_OFFICER, USER_ROLES.AUDITOR), <ActiveVisitsPage />) },
         { path: "visitor-pass/issue", element: secured(reception, <PassOperationsPage mode="issue" />) },
         { path: "security/verify-visitor", element: secured(roles(USER_ROLES.SECURITY_OFFICER), <PassOperationsPage mode="lookup" />) },

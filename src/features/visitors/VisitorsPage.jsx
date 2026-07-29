@@ -28,9 +28,9 @@ import { SelfServiceReviewModal } from "../selfservice/SelfServiceReviewModal";
 
 const STATUS_OPTIONS = ["PRE_REGISTERED", "REGISTERED", "CHECKED_IN", "CHECKED_OUT", "NO_SHOW", "CANCELLED", "EXPIRED", "ACTIVE", "INACTIVE", "BLACKLISTED"].map((value) => ({ value, label: titleCase(value) }));
 const APPOINTMENT_STATUS_OPTIONS = ["PENDING", "APPROVED", "CHECKED_IN", "CHECKED_OUT", "NO_SHOW", "CANCELLED", "EXPIRED", "REJECTED"].map((value) => ({ value, label: titleCase(value) }));
-const instantStart = (date) => date ? `${date}T00:00:00Z` : "";
-const instantEnd = (date) => date ? `${date}T23:59:59Z` : "";
-const SELF_SERVICE_REVIEW_ROLES = [USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK];
+const instantStart = (date) => date ? new Date(`${date}T00:00:00.000`).toISOString() : "";
+const instantEnd = (date) => date ? new Date(`${date}T23:59:59.999`).toISOString() : "";
+const SELF_SERVICE_REVIEW_ROLES = [USER_ROLES.FRONTDESK];
 const pendingStatusLabel = (status) => status === "PENDING_APPROVAL" ? "Pending Approval" : titleCase(status);
 
 export const VisitorsPage = () => {
@@ -40,10 +40,10 @@ export const VisitorsPage = () => {
   const pendingPagination = usePagination();
   const [search, setSearch] = useState("");
   const emptyFilters = { visitorType: "", status: "", appointmentStatus: "", departmentId: "", hostId: "", registeredBy: "", company: "", vehicleNumber: "", createdFrom: "", createdTo: "", appointmentFrom: "", appointmentTo: "", checkInFrom: "", checkInTo: "", checkOutFrom: "", checkOutTo: "" };
-  const [filters] = useState(emptyFilters);
+  const [filters, setFilters] = useState(emptyFilters);
   const [selectedId, setSelectedId] = useState(null);
   const [reviewingRegistration, setReviewingRegistration] = useState(null);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState(null);
   const canReviewSelfService = SELF_SERVICE_REVIEW_ROLES.includes(user?.role);
   const term = useDebouncedValue(search, 350);
   const company = useDebouncedValue(filters.company, 350);
@@ -103,15 +103,30 @@ export const VisitorsPage = () => {
     },
     onError: (error) => toast.error(getApiError(error).message),
   });
-  const exportCsv = async () => {
-    setExporting(true);
-    try { downloadBlob(await visitorService.exportCsv(params), `visitors-${new Date().toISOString().slice(0, 10)}.csv`); toast.success("Visitor export downloaded"); }
+  const hasRegistrationDateFilter = Boolean(filters.createdFrom || filters.createdTo);
+  const invalidRegistrationDateRange = Boolean(filters.createdFrom && filters.createdTo && filters.createdFrom > filters.createdTo);
+  const updateRegistrationDate = (field, value) => {
+    setFilters((current) => ({ ...current, [field]: value }));
+    pagination.resetPage();
+  };
+  const clearRegistrationDates = () => {
+    setFilters((current) => ({ ...current, createdFrom: "", createdTo: "" }));
+    pagination.resetPage();
+  };
+  const exportCsv = async ({ all = false } = {}) => {
+    const exportType = all ? "all" : "filtered";
+    setExporting(exportType);
+    try {
+      const suffix = all ? "all" : hasRegistrationDateFilter ? `${filters.createdFrom || "start"}-to-${filters.createdTo || "today"}` : "current";
+      downloadBlob(await visitorService.exportCsv(all ? {} : params), `visitors-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`);
+      toast.success(all ? "All visitors exported" : "Visitor export downloaded");
+    }
     catch (error) { toast.error(getApiError(error).message); }
-    finally { setExporting(false); }
+    finally { setExporting(null); }
   };
 
   const columns = useMemo(() => [
-    { header: "Tag", accessor: (row) => <span className="font-semibold text-primary-700">{row.tagNumber || row.visitorCode}</span> },
+    { header: "Tags", accessor: (row) => <div><span className="font-semibold text-primary-700">{row.tagNumber || row.visitorCode}</span><span className="mt-1 block text-xs font-semibold text-emerald-700">Physical: {row.physicalTagCode || "—"}</span></div> },
     { header: "Photo", accessor: (row) => row.photographUrl ? <img src={apiAssetUrl(row.photographUrl)} crossOrigin="use-credentials" alt="" className="h-10 w-10 rounded-lg object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 font-bold text-primary">{row.fullName?.charAt(0)}</span> },
     { header: "Visitor Name", accessor: (row) => <div><p className="font-semibold text-gray-900 dark:text-slate-100">{row.fullName}</p><p className="text-xs text-gray-500">{row.phoneNumber} · {row.email || "No email"}</p></div> },
     { header: "Company / Type", accessor: (row) => <div>{row.company || "—"}<p className="text-xs text-gray-500">{titleCase(row.visitorType)}</p></div> },
@@ -139,9 +154,48 @@ export const VisitorsPage = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="View All Visitors" description="Review new self-service submissions and search established visitor records." actions={<Button variant="secondary" onClick={exportCsv} disabled={exporting}><FiDownload /> {exporting ? "Exporting..." : "Export CSV"}</Button>} />
-      <Card className="space-y-5">
-        <Input label="Search" icon={FiSearch} value={search} onChange={(event) => { setSearch(event.target.value); pagination.resetPage(); pendingPagination.resetPage(); }} placeholder="Name, phone, email, visitor code, company, or vehicle" />
+      <PageHeader
+        title="View All Visitors"
+        description={canReviewSelfService ? "Review new self-service submissions and search established visitor records." : "Search and export established visitor records."}
+        actions={(
+          <>
+            <Button variant="secondary" onClick={() => exportCsv()} disabled={Boolean(exporting) || invalidRegistrationDateRange}>
+              <FiDownload /> {exporting === "filtered" ? "Exporting..." : "Export current CSV"}
+            </Button>
+            <Button variant="secondary" onClick={() => exportCsv({ all: true })} disabled={Boolean(exporting)}>
+              <FiDownload /> {exporting === "all" ? "Exporting all..." : "Export all CSV"}
+            </Button>
+          </>
+        )}
+      />
+      <Card className="space-y-4">
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Input label="Search" icon={FiSearch} value={search} onChange={(event) => { setSearch(event.target.value); pagination.resetPage(); pendingPagination.resetPage(); }} placeholder="Name, phone, email, visitor code, company, or vehicle" />
+          <Input
+            label="Registered from"
+            type="date"
+            value={filters.createdFrom}
+            max={filters.createdTo || undefined}
+            onChange={(event) => updateRegistrationDate("createdFrom", event.target.value)}
+          />
+          <Input
+            label="Registered to"
+            type="date"
+            value={filters.createdTo}
+            min={filters.createdFrom || undefined}
+            onChange={(event) => updateRegistrationDate("createdTo", event.target.value)}
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className={`text-sm ${invalidRegistrationDateRange ? "text-danger" : "text-gray-500 dark:text-slate-400"}`}>
+            {invalidRegistrationDateRange
+              ? "The end date must be on or after the start date."
+              : hasRegistrationDateFilter
+                ? "The visitor list and current CSV export use this registration date range."
+                : "No date range is applied; the visitor list includes all registration dates."}
+          </p>
+          {hasRegistrationDateFilter && <Button variant="ghost" onClick={clearRegistrationDates}><FiFilter /> Clear dates</Button>}
+        </div>
       </Card>
       {canReviewSelfService && (
         <Card className="space-y-4">
@@ -174,13 +228,13 @@ export const VisitorsPage = () => {
       )}
       <Card>{result.isLoading ? <TableSkeleton /> : result.error ? <ApiErrorState error={result.error} onRetry={result.refetch} /> : <><ResourceTable columns={columns} rows={result.data?.content} emptyTitle="No visitors found" emptyMessage="Try changing the search term or filters." /><Pagination page={result.data} onPageChange={pagination.setPage} /></>}</Card>
       <VisitorDetailsModal visitorId={selectedId} onClose={() => setSelectedId(null)} />
-      <SelfServiceReviewModal
-        registration={reviewingRegistration}
-        onClose={() => setReviewingRegistration(null)}
-        onApprove={(id) => approve.mutate(id)}
-        onReject={(id, reason) => reject.mutate({ id, reason })}
-        isLoading={approve.isPending || reject.isPending}
-      />
+      {canReviewSelfService && <SelfServiceReviewModal
+          registration={reviewingRegistration}
+          onClose={() => setReviewingRegistration(null)}
+          onApprove={(id, physicalTagId) => approve.mutate({ id, physicalTagId })}
+          onReject={(id, reason) => reject.mutate({ id, reason })}
+          isLoading={approve.isPending || reject.isPending}
+        />}
     </div>
   );
 };

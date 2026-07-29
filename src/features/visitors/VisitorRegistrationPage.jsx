@@ -99,6 +99,7 @@ export const VisitorRegistrationPage = () => {
           hostName: formValues.hostName.trim(),
           departmentName: formValues.departmentName.trim(),
           branchName: formValues.branchName.trim(),
+          physicalTagId: formValues.physicalTagId,
           appointmentDate: formValues.appointmentDate,
           appointmentTime: formValues.appointmentTime,
           ...capturePayload,

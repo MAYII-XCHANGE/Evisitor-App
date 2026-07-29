@@ -1,6 +1,7 @@
 import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
 import { visitorRegistrationRules } from "../../validation/visitorValidation";
+import { PhysicalTagSelect } from "../../components/PhysicalTagSelect";
 
 export const VisitorVisitDetailsStep = ({
   register,
@@ -10,6 +11,7 @@ export const VisitorVisitDetailsStep = ({
   onBranchChange,
   onDepartmentChange,
   locationOptionsLoading = false,
+  showPhysicalTag = true,
 }) => (
   <section aria-labelledby="visitor-visit-heading">
     <h2 id="visitor-visit-heading" className="text-lg font-bold text-gray-900 dark:text-slate-100">Host and visit</h2>
@@ -46,6 +48,7 @@ export const VisitorVisitDetailsStep = ({
       )}
       <Input label="Visit date" required type="date" readOnly error={errors.appointmentDate?.message} {...register("appointmentDate", visitorRegistrationRules.appointmentDate)} />
       <Input label="Arrival time" required type="time" error={errors.appointmentTime?.message} {...register("appointmentTime", visitorRegistrationRules.appointmentTime)} />
+      {showPhysicalTag && <PhysicalTagSelect registration={register("physicalTagId", visitorRegistrationRules.physicalTagId)} error={errors.physicalTagId?.message} />}
     </div>
     <p className="mt-4 rounded-xl bg-primary-50 p-4 text-sm text-primary-700">
       {branchOptions ? "Select the branch and department that should receive this registration for Front Desk review." : "These details will be stored exactly as entered and will not be matched against staff records."}

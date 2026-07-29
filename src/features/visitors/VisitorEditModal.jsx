@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { visitorService } from "../../services/visitorService";
 import { getApiError } from "../../utils/apiResponse";
+import { sanitizeNigerianPhoneInput, visitorRegistrationRules } from "../../validation/visitorValidation";
 
 export const VisitorEditModal = ({ visitor, onClose }) => {
   const queryClient = useQueryClient();
@@ -29,7 +30,17 @@ export const VisitorEditModal = ({ visitor, onClose }) => {
     <Modal isOpen={Boolean(visitor)} title="Edit visitor" description="Update the visitor's contact and organisation details." onClose={onClose} footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button type="submit" form="visitor-edit-form" disabled={mutation.isPending}>{mutation.isPending ? "Saving..." : "Save changes"}</Button></>}>
       <form id="visitor-edit-form" className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit((values) => mutation.mutate(values))}>
         <Input label="Full name" error={errors.visitorName?.message} {...register("visitorName", { required: "Full name is required" })} />
-        <Input label="Phone number" error={errors.phoneNumber?.message} {...register("phoneNumber", { required: "Phone number is required" })} />
+        <Input
+          label="Phone number"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          maxLength={14}
+          placeholder="+2349059773535 or 09059773535"
+          error={errors.phoneNumber?.message}
+          onInput={(event) => { event.currentTarget.value = sanitizeNigerianPhoneInput(event.currentTarget.value); }}
+          {...register("phoneNumber", visitorRegistrationRules.phoneNumber)}
+        />
         <Input label="Email" type="email" error={errors.email?.message} {...register("email", { pattern: { value: /^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email" } })} />
         <Input label="Company" {...register("company")} />
         {errors.root && <p className="sm:col-span-2 text-sm text-danger">{errors.root.message}</p>}
