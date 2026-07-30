@@ -65,7 +65,6 @@ export const roleMenuItems = {
     MENU_ITEMS.dashboard,
     MENU_ITEMS.branchReports,
     MENU_ITEMS.blacklist,
-    MENU_ITEMS.physicalTags,
   ],
   [USER_ROLES.FRONTDESK]: [
     MENU_ITEMS.dashboard,

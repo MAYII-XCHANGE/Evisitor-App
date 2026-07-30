@@ -21,6 +21,7 @@ import { BlacklistPage } from "../features/blacklist/BlacklistPage";
 import { NotificationsPage } from "../features/notifications/NotificationsPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
+import { BranchReportsPage } from "../features/reports/BranchReportsPage";
 import { AuditLogsPage } from "../features/reports/AuditLogsPage";
 import { AnalyticsPage } from "../features/reports/AnalyticsPage";
 import { SelfServicePage } from "../features/selfservice/SelfServicePage";
@@ -32,7 +33,7 @@ const visitorReaders = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, US
 const reception = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK);
 const frontDeskOnly = roles(USER_ROLES.FRONTDESK);
 const appointmentUsers = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK, USER_ROLES.EMPLOYEE_HOST);
-const reportUsers = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.AUDITOR);
+const reportUsers = roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.AUDITOR);
 
 const secured = (allowedRoles, element) => <ProtectedRoute allowedRoles={allowedRoles}>{element}</ProtectedRoute>;
 
@@ -68,7 +69,7 @@ export const router = createBrowserRouter([
         { path: "blacklist", element: secured(roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.BRANCH_ADMIN, USER_ROLES.SECURITY_OFFICER), <BlacklistPage />) },
         { path: "notifications", element: secured(roles(USER_ROLES.EMPLOYEE_HOST), <NotificationsPage />) },
         { path: "reports", element: secured(reportUsers, <ReportsPage />) },
-        { path: "branch-reports", element: secured(roles(USER_ROLES.BRANCH_ADMIN), <ReportsPage />) },
+        { path: "branch-reports", element: secured(roles(USER_ROLES.BRANCH_ADMIN), <BranchReportsPage />) },
         { path: "audit-logs", element: secured(roles(USER_ROLES.AUDITOR, USER_ROLES.SUPER_ADMIN), <AuditLogsPage />) },
         { path: "analytics", element: secured(roles(USER_ROLES.SUPER_ADMIN), <AnalyticsPage />) },
         { path: "settings", element: secured(roles(USER_ROLES.SUPER_ADMIN), <SettingsPage />) },

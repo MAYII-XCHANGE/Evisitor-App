@@ -35,8 +35,10 @@ export const DashboardPage = () => {
   const [reviewingRegistration, setReviewingRegistration] = useState(null);
   const { user } = useAuth();
   const isSuperAdmin = user?.role === USER_ROLES.SUPER_ADMIN;
+  const isBranchAdmin = user?.role === USER_ROLES.BRANCH_ADMIN;
   const isFrontDesk = user?.role === USER_ROLES.FRONTDESK;
-  const hideRecentActivities = isFrontDesk || user?.role === USER_ROLES.SECURITY_OFFICER;
+  const hideActiveVisitors = isSuperAdmin || isBranchAdmin;
+  const hideRecentActivities = isSuperAdmin || isBranchAdmin || isFrontDesk || user?.role === USER_ROLES.SECURITY_OFFICER;
   const canReviewSelfService = user?.role === USER_ROLES.FRONTDESK;
   const canOpenActiveVisitors = [USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK, USER_ROLES.SECURITY_OFFICER, USER_ROLES.AUDITOR].includes(user?.role);
   const { data, isLoading, error, refetch } = useQuery({
@@ -179,8 +181,9 @@ export const DashboardPage = () => {
         </Card>
       </div>
 
-      <div className={`grid gap-6 ${!isSuperAdmin && !hideRecentActivities ? "xl:grid-cols-[1.2fr_0.8fr]" : ""}`}>
-        {!isSuperAdmin && (
+      {(!hideActiveVisitors || !hideRecentActivities) && (
+      <div className={`grid gap-6 ${!hideActiveVisitors && !hideRecentActivities ? "xl:grid-cols-[1.2fr_0.8fr]" : ""}`}>
+        {!hideActiveVisitors && (
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900 dark:text-white">Active visitors</h3>
@@ -231,6 +234,7 @@ export const DashboardPage = () => {
           </div>
         )}
       </div>
+      )}
       {canReviewSelfService && <SelfServiceReviewModal
           registration={reviewingRegistration}
           onClose={() => setReviewingRegistration(null)}

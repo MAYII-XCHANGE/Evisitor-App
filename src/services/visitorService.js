@@ -17,7 +17,8 @@ export const visitorService = {
   deleteFile: async (id) => apiClient.delete(`/visitors/files/${id}`),
   directory: async ({ page = 0, size = 10, ...params } = {}) => unwrapResponse(await apiClient.get("/visitors/directory", { params: { page, size, ...params } })),
   details: async (id) => unwrapResponse(await apiClient.get(`/visitors/${id}/details`)),
-  exportCsv: async (params = {}) => (await apiClient.get("/visitors/export", { params: { ...params, format: "csv" }, responseType: "blob" })).data,
+  exportVisitors: async ({ format = "csv", params = {} } = {}) =>
+    (await apiClient.get("/visitors/export", { params: { ...params, format }, responseType: "blob" })).data,
   update: async (id, payload) => unwrapResponse(await apiClient.patch(`/visitors/${id}`, payload)),
   history: async (id, { page = 0, size = 10 } = {}) =>
     unwrapResponse(await apiClient.get(`/visitors/${id}/history`, { params: { page, size } })),

@@ -50,7 +50,7 @@ export const UsersPage = () => {
     { header: "Actions", accessor: (row) => row, cell: (_, row) => <AdminTableActions row={row} onView={setViewing} onEdit={setEditing} onDelete={(item) => setConfirm({ type: "delete", row: item })} disabled={actionMutation.isPending} showStatus={false} /> },
   ], [actionMutation.isPending]);
   return <div className="space-y-6">
-    <PageHeader eyebrow="Super Admin" title="User Management" description="Create, review, and manage portal users and their access assignments." actions={<Button type="button" onClick={() => setEditing(null)}><FiUserPlus /> Create New User</Button>} />
+    <PageHeader title="User Management" description="Create, review, and manage portal users and their access assignments." actions={<Button type="button" onClick={() => setEditing(null)}><FiUserPlus /> Create New User</Button>} />
     <Card>{result.isLoading ? <TableSkeleton /> : result.error ? <ApiErrorState error={result.error} onRetry={result.refetch} /> : <><ResourceTable columns={columns} rows={result.data?.content} emptyTitle="No users found" emptyMessage="Try changing your filters or create a user." /><Pagination page={result.data} onPageChange={pagination.setPage} /></>}</Card>
     <UserFormModal isOpen={editing !== undefined} user={editing || undefined} onClose={() => setEditing(undefined)} />
     <ResourceDetailsModal isOpen={Boolean(viewing)} title={viewing ? emailDisplayName(viewing.email) : "User details"} onClose={() => setViewing(undefined)} fields={viewing ? [

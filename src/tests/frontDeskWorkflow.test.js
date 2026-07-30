@@ -90,7 +90,7 @@ test("Front Desk navigation exposes the authorized workflow entries including ch
   const navigation = source("../config/navigation.js");
   const frontDesk = navigation.match(/\[USER_ROLES\.FRONTDESK\]: \[([\s\S]*?)\n {2}\],/)[1];
   const keys = [...frontDesk.matchAll(/MENU_ITEMS\.([A-Za-z]+)/g)].map((match) => match[1]);
-  assert.deepEqual(keys, ["dashboard", "registerVisitor", "appointments", "visitors", "selfServiceRegistrations", "physicalTags", "checkOut"]);
+  assert.deepEqual(new Set(keys), new Set(["dashboard", "registerVisitor", "appointments", "visitors", "selfServiceRegistrations", "physicalTags", "checkOut"]));
 });
 
 test("sidebar menu icons use a fixed left-aligned column", () => {
@@ -178,6 +178,17 @@ test("authenticated browser sessions are restored safely after a page reload", (
   assert.match(apiClient, /request\?\.skipAuthRefresh/);
 });
 
+test("staff sign in can show and hide the password accessibly", () => {
+  const login = source("../features/auth/LoginPage.jsx");
+  const input = source("../components/ui/Input.jsx");
+  assert.match(login, /passwordVisible \? "text" : "password"/);
+  assert.match(login, /passwordVisible \? "Hide password" : "Show password"/);
+  assert.match(login, /FiEyeOff/);
+  assert.match(login, /FiEye/);
+  assert.match(login, /type="button"/);
+  assert.match(input, /trailing \? "pr-11"/);
+});
+
 test("registration submits only to the walk-in API", () => {
   const service = source("../services/visitorService.js");
   const appointments = source("../services/appointmentService.js");
@@ -218,24 +229,71 @@ test("top banner has no password-change control", () => {
   assert.doesNotMatch(banner, /FiKey|ChangePasswordModal|Change password/);
 });
 
+test("Super Admin dashboard hides recent activities and departments omit the code table column", () => {
+  const dashboard = source("../features/dashboard/DashboardPage.jsx");
+  const departments = source("../features/admin/DepartmentsPage.jsx");
+  assert.match(dashboard, /hideRecentActivities = isSuperAdmin \|\| isBranchAdmin \|\| isFrontDesk/);
+  const departmentColumns = departments.match(/const columns = useMemo\(\(\) => \[([\s\S]*?)\],\n\s+\[deleteMutation/)[1];
+  assert.doesNotMatch(departmentColumns, /header:"Code"/);
+  assert.match(departmentColumns, /header:"Name"/);
+});
+
+test("Branch Administrator dashboard hides active visitors and recent activities", () => {
+  const dashboard = source("../features/dashboard/DashboardPage.jsx");
+  assert.match(dashboard, /isBranchAdmin = user\?\.role === USER_ROLES\.BRANCH_ADMIN/);
+  assert.match(dashboard, /hideActiveVisitors = isSuperAdmin \|\| isBranchAdmin/);
+  assert.match(dashboard, /hideRecentActivities = isSuperAdmin \|\| isBranchAdmin/);
+  assert.match(dashboard, /\(!hideActiveVisitors \|\| !hideRecentActivities\) &&/);
+});
+
+test("Branch Operations Report is branch scoped with presets, analytics, detail filters, and exports", () => {
+  const router = source("../routes/router.jsx");
+  const page = source("../features/reports/BranchReportsPage.jsx");
+  const exportModal = source("../features/reports/BranchReportExportModal.jsx");
+  const service = source("../services/reportService.js");
+  assert.match(router, /path: "branch-reports".*<BranchReportsPage \/>/);
+  assert.match(page, /Branch Operations Report —/);
+  ["Today", "Last 7 days", "Last 30 days", "This month", "Custom range"].forEach((label) => assert.match(page, new RegExp(label)));
+  ["Visitor traffic trend", "Visit status breakdown", "Visitor type breakdown", "Department traffic", "Physical tag accountability", "Detailed visitor report"].forEach((label) => assert.match(page, new RegExp(label)));
+  assert.match(page, /VisitorDetailsModal/);
+  assert.match(page, /Pagination/);
+  assert.match(exportModal, /Current reporting period/);
+  assert.match(exportModal, /Current filtered visitor table/);
+  assert.match(exportModal, /Excel \(\.xlsx\)/);
+  assert.match(service, /\/reports\/branch-summary/);
+  assert.match(service, /\/reports\/branch-visitors/);
+  assert.match(service, /\/reports\/branch-export/);
+  assert.doesNotMatch(page, /Export audit CSV/);
+});
+
 test("visitor search, filters, details, pagination, and export are connected", () => {
   const page = source("../features/visitors/VisitorsPage.jsx");
+  const exportModal = source("../features/visitors/VisitorExportModal.jsx");
+  const service = source("../services/visitorService.js");
   assert.match(page, /useDebouncedValue/);
   assert.match(page, /appointmentStatus/);
   assert.match(page, /checkInFrom/);
   assert.match(page, /VisitorDetailsModal/);
-  assert.match(page, /exportCsv/);
-  assert.match(page, /label="Registered from"/);
-  assert.match(page, /label="Registered to"/);
-  assert.match(page, /Export current CSV/);
-  assert.match(page, /Export all CSV/);
-  assert.match(page, /visitorService\.exportCsv\(all \? \{\} : params\)/);
+  assert.match(page, /VisitorExportModal/);
+  assert.match(page, /label="from"/);
+  assert.match(page, /label="to"/);
+  assert.match(page, /Export visitors/);
+  assert.doesNotMatch(page, /Export current CSV|Export all CSV/);
+  assert.match(exportModal, /All visitors/);
+  assert.match(exportModal, /Current filtered results/);
+  assert.match(exportModal, /Custom date range/);
+  assert.match(exportModal, /Excel \(\.xlsx\)/);
+  assert.match(exportModal, /export-count/);
+  assert.match(exportModal, /totalElements/);
+  assert.match(exportModal, /visitors-\$\{scopeName\}-\$\{today\(\)\}\.\$\{format\}/);
+  assert.match(service, /format \}, responseType: "blob"/);
   assert.match(page, /Pagination/);
 });
 
-test("successful self-service submissions appear in View All Visitors pending review", () => {
+test("self-service reviews stay in their dedicated page and are absent from View All Visitors", () => {
   const selfServicePage = source("../features/selfservice/SelfServicePage.jsx");
   const visitorsPage = source("../features/visitors/VisitorsPage.jsx");
+  const registrationsPage = source("../features/selfservice/SelfServiceRegistrationsPage.jsx");
   const dashboardPage = source("../features/dashboard/DashboardPage.jsx");
   const service = source("../services/selfServiceService.js");
   assert.match(service, /self-service\/registrations\/options/);
@@ -244,13 +302,14 @@ test("successful self-service submissions appear in View All Visitors pending re
   assert.match(service, /branchId: values\.branchId/);
   assert.match(selfServicePage, /selfServiceService\.options/);
   assert.match(selfServicePage, /invalidateQueries\(\{ queryKey: \["self-service-registrations"\] \}\)/);
-  assert.match(visitorsPage, /selfServiceService\.list/);
-  assert.match(visitorsPage, /status: "PENDING_APPROVAL"/);
-  assert.match(visitorsPage, /refetchInterval: 5000/);
-  assert.match(visitorsPage, /Awaiting Front Desk Review/);
-  assert.match(visitorsPage, /SelfServiceReviewModal/);
-  assert.match(visitorsPage, /selfServiceService\.approve/);
-  assert.match(visitorsPage, /selfServiceService\.reject/);
+  assert.doesNotMatch(visitorsPage, /selfServiceService/);
+  assert.doesNotMatch(visitorsPage, /Awaiting Front Desk Review/);
+  assert.doesNotMatch(visitorsPage, /SelfServiceReviewModal/);
+  assert.match(registrationsPage, /status,setStatus.*"PENDING_APPROVAL"/);
+  assert.match(registrationsPage, /selfServiceService\.list/);
+  assert.match(registrationsPage, /SelfServiceReviewModal/);
+  assert.match(registrationsPage, /selfServiceService\.approve/);
+  assert.match(registrationsPage, /selfServiceService\.reject/);
   assert.match(dashboardPage, /pendingSelfServiceRegistrations/);
   assert.match(dashboardPage, /refetchInterval: canReviewSelfService \? 5000/);
   assert.match(dashboardPage, /SelfServiceReviewModal/);

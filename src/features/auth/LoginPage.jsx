@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiArrowRight, FiLock, FiMail } from "react-icons/fi";
+import { FiArrowLeft, FiArrowRight, FiEye, FiEyeOff, FiLock, FiMail } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { motion as Motion } from "framer-motion";
 import { Input } from "../../components/ui/Input";
@@ -17,6 +17,7 @@ export const LoginPage = () => {
   const location = useLocation();
   const { login, isAuthenticated, status } = useAuth();
   const { isOnline } = usePwa();
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm({
     defaultValues: { email: "", password: "" },
   });
@@ -49,7 +50,26 @@ export const LoginPage = () => {
         </div>
         <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
           <Input label="Email" type="email" autoComplete="username" icon={FiMail} placeholder="name@novabank.ng" error={errors.email?.message} {...register("email", loginRules.email)} />
-          <Input label="Password" type="password" autoComplete="current-password" icon={FiLock} placeholder="Enter password" error={errors.password?.message} {...register("password", loginRules.password)} />
+          <Input
+            label="Password"
+            type={passwordVisible ? "text" : "password"}
+            autoComplete="current-password"
+            icon={FiLock}
+            placeholder="Enter password"
+            error={errors.password?.message}
+            trailing={(
+              <button
+                type="button"
+                aria-label={passwordVisible ? "Hide password" : "Show password"}
+                aria-pressed={passwordVisible}
+                onClick={() => setPasswordVisible((visible) => !visible)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200"
+              >
+                {passwordVisible ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
+              </button>
+            )}
+            {...register("password", loginRules.password)}
+          />
           {errors.root && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-danger">{errors.root.message}</p>}
           <button type="submit" disabled={isSubmitting || status === "loading" || !isOnline} title={!isOnline ? "Internet connection required" : undefined} className="relative flex w-full transform justify-center rounded-xl border border-transparent bg-gradient-to-r from-blue-600 to-blue-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:from-blue-700 hover:to-blue-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
             {!isOnline ? "Internet connection required" : isSubmitting ? "Signing in..." : <span className="flex items-center">Sign in <FiArrowRight className="ml-2 h-4 w-4" /></span>}
