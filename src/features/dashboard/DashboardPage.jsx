@@ -14,6 +14,7 @@ import { Pagination } from "../../components/ui/Pagination";
 import { USER_ROLES } from "../../config/roles";
 import { dashboardService } from "../../services/dashboardService";
 import { selfServiceService } from "../../services/selfServiceService";
+import { visitService } from "../../services/visitService";
 import { useAuth } from "../../hooks/useAuth";
 import { usePagination } from "../../hooks/usePagination";
 import { formatDateTime, titleCase } from "../../utils/formatters";
@@ -46,6 +47,7 @@ export const DashboardPage = () => {
     queryFn: () => dashboardService.get(),
     refetchInterval: canReviewSelfService ? 5000 : false,
   });
+  const handover = useQuery({ queryKey: ["handover-status"], queryFn: visitService.handoverStatus, enabled: isFrontDesk, refetchInterval: 60_000 });
   const refreshAfterReview = () => {
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["self-service-registrations"] });
@@ -73,6 +75,7 @@ export const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
+      {isFrontDesk && handover.data?.handoverWarning && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">Front Desk closes at {formatDateTime(handover.data.closesAt)}. Review or hand over {handover.data.activeVisitors} active visitor(s) to Security.</div>}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h2 className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Dashboard Summary</h2>

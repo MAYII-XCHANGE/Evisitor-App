@@ -21,7 +21,7 @@ import { BranchReportExportModal } from "./BranchReportExportModal";
 
 const COLORS = ["#01B0F1", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#0EA5E9", "#64748B"];
 const VISITOR_TYPES = ["GUEST", "CONTRACTOR", "VENDOR", "INTERVIEW_CANDIDATE", "DELIVERY_PERSONNEL", "GOVERNMENT_OFFICIAL", "OTHER"];
-const VISIT_STATUSES = ["PENDING_HOST", "ONSITE", "ESCORTED", "OVERDUE", "CHECKED_OUT"];
+const VISIT_STATUSES = ["PENDING_HOST", "ONSITE", "ESCORTED", "AFTER_HOURS_ONSITE", "OVERDUE", "CHECKED_OUT"];
 
 const shiftDate = (date, days) => {
   const value = new Date(`${date}T12:00:00`);

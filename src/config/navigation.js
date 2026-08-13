@@ -46,6 +46,7 @@ export const MENU_ITEMS = {
   verifyVisitor: { label: "Verify Visitor Pass", path: "/security/verify-visitor", icon: FiShield },
   scanPass: { label: "Scan Visitor Pass", path: "/security/scan-pass", icon: FiCreditCard },
   activeVisitors: { label: "Active Visitors", path: "/active-visitors", icon: FiActivity },
+  afterHoursVisitors: { label: "After-Hours Visitors", path: "/security/after-hours", icon: FiClock },
   blacklist: { label: "Blacklist", path: "/blacklist", icon: FiAlertTriangle },
   reports: { label: "Reports", path: "/reports", icon: FiFileText },
   logs: { label: "Audit Logs", path: "/audit-logs", icon: FiActivity },
@@ -63,6 +64,8 @@ export const roleMenuItems = {
   ],
   [USER_ROLES.BRANCH_ADMIN]: [
     MENU_ITEMS.dashboard,
+    MENU_ITEMS.activeVisitors,
+    MENU_ITEMS.notifications,
     MENU_ITEMS.branchReports,
     MENU_ITEMS.blacklist,
   ],
@@ -81,12 +84,14 @@ export const roleMenuItems = {
     MENU_ITEMS.expectedVisitors,
     MENU_ITEMS.appointments,
     MENU_ITEMS.notifications,
+    MENU_ITEMS.activeVisitors,
   ],
   [USER_ROLES.SECURITY_OFFICER]: [
     MENU_ITEMS.dashboard,
     MENU_ITEMS.verifyVisitor,
     MENU_ITEMS.scanPass,
     MENU_ITEMS.activeVisitors,
+    MENU_ITEMS.afterHoursVisitors,
     MENU_ITEMS.blacklist,
   ],
   [USER_ROLES.AUDITOR]: [

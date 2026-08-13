@@ -22,13 +22,6 @@ export const PhysicalTagSelect = ({ registration, value, onChange, error, disabl
 
   return (
     <div className="space-y-3 md:col-span-2 xl:col-span-3">
-      <Input
-        label="Search available physical tags"
-        placeholder="Search by tag code, description, or branch"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        disabled={disabled || result.isLoading}
-      />
       <Select
         label="Physical visitor tag"
         required

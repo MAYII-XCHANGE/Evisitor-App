@@ -314,3 +314,21 @@ test("self-service reviews stay in their dedicated page and are absent from View
   assert.match(dashboardPage, /refetchInterval: canReviewSelfService \? 5000/);
   assert.match(dashboardPage, /SelfServiceReviewModal/);
 });
+
+test("end-of-day handover exposes deadlines, Security queue, checkout, and controlled extensions", () => {
+  const roles = source("../config/roles.js");
+  const navigation = source("../config/navigation.js");
+  const router = source("../routes/router.jsx");
+  const visits = source("../features/visits/ActiveVisitsPage.jsx");
+  const dashboard = source("../features/dashboard/DashboardPage.jsx");
+  const service = source("../services/visitService.js");
+  assert.match(roles, /SECURITY_OFFICER[\s\S]*PERMISSIONS\.CHECK_OUT/);
+  assert.match(navigation, /After-Hours Visitors/);
+  assert.match(router, /security\/after-hours[\s\S]*afterHoursOnly checkoutMode/);
+  assert.match(visits, /expectedCheckOutAt/);
+  assert.match(visits, /AFTER_HOURS_ONSITE/);
+  assert.match(visits, /USER_ROLES\.EMPLOYEE_HOST, USER_ROLES\.BRANCH_ADMIN/);
+  assert.match(service, /\/handover-status/);
+  assert.match(service, /\/expected-checkout/);
+  assert.match(dashboard, /handoverWarning/);
+});
