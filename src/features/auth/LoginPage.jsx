@@ -44,8 +44,7 @@ export const LoginPage = () => {
       <Motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md rounded-xl border border-white/70 bg-white p-8 shadow-card">
         <div className="text-center">
           <img src={logo} alt="NOVA Bank" className="mx-auto h-20 w-auto object-contain" />
-          <p className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-primary">Staff portal</p>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">Staff sign in</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">Sign In</h1>
           <p className="mt-2 text-sm text-gray-500">Use your staff account to open the tools available to your assigned role.</p>
         </div>
         <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
