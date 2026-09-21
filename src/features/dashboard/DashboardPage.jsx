@@ -190,7 +190,7 @@ export const DashboardPage = () => {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900 dark:text-white">Active visitors</h3>
-              {canOpenActiveVisitors && <Button variant="secondary" onClick={() => navigate("/active-visitors")}>View all</Button>}
+              {/* {canOpenActiveVisitors && <Button variant="secondary" onClick={() => navigate("/active-visitors")}>View all</Button>} */}
             </div>
             <div className="table-scroll overflow-x-auto">
               <table className="w-full min-w-[680px] text-left text-sm">

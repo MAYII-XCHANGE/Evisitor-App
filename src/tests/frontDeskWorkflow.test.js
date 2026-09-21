@@ -174,7 +174,9 @@ test("authenticated browser sessions are restored safely after a page reload", (
   const apiClient = source("../services/apiClient.js");
   assert.match(authContext, /restorationPromiseRef/);
   assert.match(authContext, /\[401, 403\]\.includes/);
+  assert.match(authContext, /authService\.profile\(\{ skipAuthRefresh: true \}\)/);
   assert.match(authContext, /authService\.refresh\(\)/);
+  assert.doesNotMatch(authContext, /authService\.me\(/);
   assert.match(apiClient, /request\?\.skipAuthRefresh/);
 });
 

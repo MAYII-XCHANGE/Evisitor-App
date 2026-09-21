@@ -24,27 +24,23 @@ export const AuthProvider = ({ children }) => {
 
   const refreshSession = useCallback(async () => {
     const session = await authService.refresh();
-    await authService.csrf();
     applySession(session);
   }, [applySession]);
 
   useEffect(() => {
     configureApiSession({
       refresh: refreshSession,
-      csrf: authService.csrf,
       onUnauthorized: clearSession,
     });
 
     let active = true;
     const restoreSession = () => {
       restorationPromiseRef.current ||= (async () => {
-        await authService.csrf();
         try {
-          return { user: await authService.me({ skipAuthRefresh: true }) };
+          return { user: await authService.profile({ skipAuthRefresh: true }) };
         } catch (error) {
           if (![401, 403].includes(error.response?.status)) throw error;
           const session = await authService.refresh();
-          await authService.csrf();
           return session;
         }
       })().finally(() => {
@@ -68,9 +64,7 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (credentials) => {
     setStatus("loading");
     try {
-      await authService.csrf();
       const session = await authService.login(credentials);
-      await authService.csrf();
       applySession(session);
       return session.user;
     } catch (error) {
@@ -81,7 +75,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      await authService.csrf();
       await authService.logout();
     } finally {
       clearSession();

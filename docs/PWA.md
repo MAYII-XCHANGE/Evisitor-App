@@ -20,7 +20,7 @@ The service worker may precache generated frontend files such as HTML, JavaScrip
 
 Every URL whose path begins with `/api` uses Workbox `NetworkOnly` handling for `GET`, `POST`, `PUT`, `PATCH`, and `DELETE`. Consequently, the service worker does not cache:
 
-- login, logout, refresh, CSRF, or current-user responses;
+- login, logout, refresh, or current-user responses;
 - visitor and appointment information;
 - photographs, identification documents, or signatures;
 - reports and audit records;

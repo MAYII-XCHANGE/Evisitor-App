@@ -4,7 +4,7 @@ React frontend for the Spring Boot service in `../visitor-management-portal`.
 
 ## Local development
 
-1. Start the backend on `http://localhost:8080/api`.
+1. Start the backend on `http://localhost:8077/api`.
 2. Copy `.env.example` to `.env.local` if you need to override the API URL.
 3. Install dependencies and start Vite:
 
@@ -15,7 +15,7 @@ npm run dev
 
 ## Session security
 
-Access and refresh tokens are held only in secure `HttpOnly` cookies issued by the backend. They are never returned to JavaScript and are never written to local storage or session storage. The frontend restores the current user through `/auth/me`, includes credentials and CSRF protection on API calls, retries one expired session through the refresh cookie, and returns failed sessions to login.
+Access and refresh tokens are held only in secure `HttpOnly` cookies issued by the backend. They are never returned to JavaScript and are never written to local storage or session storage. The frontend restores the current user through `/auth/me`, includes credentials on API calls, retries one expired session through the refresh cookie, and returns failed sessions to login.
 
 ## Front Desk routes
 
