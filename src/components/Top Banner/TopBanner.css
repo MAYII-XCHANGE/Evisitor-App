@@ -34,6 +34,47 @@
   background: #fff1f2;
 }
 
+.notification-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #241b5e;
+  cursor: pointer;
+}
+
+.notification-btn:hover,
+.notification-btn:focus-visible {
+  border-color: #01b0f1;
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(1 176 241 / 16%);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
 @media (max-width: 900px) {
   .welcome {
     justify-content: space-between;
@@ -51,6 +92,13 @@
     flex: 1 1 100%;
     font-size: 15px;
     line-height: 1.4;
+  }
+
+  .notification-btn,
+  .logout-btn {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
   }
 }
 

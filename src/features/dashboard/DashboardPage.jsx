@@ -1,78 +1,35 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { FiArrowUpRight, FiEye } from "react-icons/fi";
-import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
+import { FiArrowUpRight } from "react-icons/fi";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion as Motion } from "framer-motion";
 import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { StatusBadge } from "../../components/ui/StatusBadge";
 import { TableSkeleton } from "../../components/ui/Skeleton";
 import { ApiErrorState } from "../../components/ui/ApiErrorState";
-import { Pagination } from "../../components/ui/Pagination";
 import { USER_ROLES } from "../../config/roles";
 import { dashboardService } from "../../services/dashboardService";
-import { selfServiceService } from "../../services/selfServiceService";
 import { visitService } from "../../services/visitService";
 import { useAuth } from "../../hooks/useAuth";
-import { usePagination } from "../../hooks/usePagination";
-import { formatDateTime, titleCase } from "../../utils/formatters";
-import { getApiError } from "../../utils/apiResponse";
-import { SelfServiceReviewModal } from "../selfservice/SelfServiceReviewModal";
-
-const clientPage = (rows, page, size) => {
-  const totalElements = rows.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / size));
-  const number = Math.min(page, totalPages - 1);
-  const content = rows.slice(number * size, number * size + size);
-  return { content, number, size, numberOfElements: content.length, totalElements, totalPages, first: number === 0, last: number >= totalPages - 1 };
-};
+import { formatDateTime } from "../../utils/formatters";
 
 export const DashboardPage = () => {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const activePagination = usePagination();
-  const [reviewingRegistration, setReviewingRegistration] = useState(null);
   const { user } = useAuth();
   const isSuperAdmin = user?.role === USER_ROLES.SUPER_ADMIN;
   const isBranchAdmin = user?.role === USER_ROLES.BRANCH_ADMIN;
   const isFrontDesk = user?.role === USER_ROLES.FRONTDESK;
   const hideActiveVisitors = isSuperAdmin || isBranchAdmin;
   const hideRecentActivities = isSuperAdmin || isBranchAdmin || isFrontDesk || user?.role === USER_ROLES.SECURITY_OFFICER;
-  const canReviewSelfService = user?.role === USER_ROLES.FRONTDESK;
-  const canOpenActiveVisitors = [USER_ROLES.BRANCH_ADMIN, USER_ROLES.FRONTDESK, USER_ROLES.SECURITY_OFFICER, USER_ROLES.AUDITOR].includes(user?.role);
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => dashboardService.get(),
-    refetchInterval: canReviewSelfService ? 5000 : false,
+    refetchInterval: isFrontDesk ? 5000 : false,
   });
   const handover = useQuery({ queryKey: ["handover-status"], queryFn: visitService.handoverStatus, enabled: isFrontDesk, refetchInterval: 60_000 });
-  const refreshAfterReview = () => {
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    queryClient.invalidateQueries({ queryKey: ["self-service-registrations"] });
-    queryClient.invalidateQueries({ queryKey: ["visitors"] });
-    queryClient.invalidateQueries({ queryKey: ["active-visits"] });
-    setReviewingRegistration(null);
-  };
-  const approve = useMutation({
-    mutationFn: selfServiceService.approve,
-    onSuccess: () => { toast.success("Visitor approved and checked in"); refreshAfterReview(); },
-    onError: (requestError) => toast.error(getApiError(requestError).message),
-  });
-  const reject = useMutation({
-    mutationFn: ({ id, reason }) => selfServiceService.reject(id, reason),
-    onSuccess: () => { toast.success("Registration rejected"); refreshAfterReview(); },
-    onError: (requestError) => toast.error(getApiError(requestError).message),
-  });
 
   if (isLoading) {
     return <TableSkeleton />;
   }
 
   if (error) return <ApiErrorState error={error} onRetry={refetch} />;
-  const activeVisitorsPage = clientPage(data?.activeVisitors || [], activePagination.page, activePagination.size);
-
   return (
     <div className="space-y-6">
       {isFrontDesk && handover.data?.handoverWarning && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">Front Desk closes at {formatDateTime(handover.data.closesAt)}. Review or hand over {handover.data.activeVisitors} active visitor(s) to Security.</div>}
@@ -166,13 +123,6 @@ export const DashboardPage = () => {
         )}
       </div>
       )}
-      {canReviewSelfService && <SelfServiceReviewModal
-          registration={reviewingRegistration}
-          onClose={() => setReviewingRegistration(null)}
-          onApprove={(id, physicalTagId) => approve.mutate({ id, physicalTagId })}
-          onReject={(id, reason) => reject.mutate({ id, reason })}
-          isLoading={approve.isPending || reject.isPending}
-        />}
     </div>
   );
 };

@@ -1,24 +1,20 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import { physicalTagService } from "../services/physicalTagService";
 
 export const PhysicalTagSelect = ({ registration, value, onChange, error, disabled = false }) => {
-  const [search, setSearch] = useState("");
   const result = useQuery({
     queryKey: ["physical-tags", "available"],
     queryFn: physicalTagService.available,
   });
   const options = useMemo(() => {
-    const term = search.trim().toLowerCase();
     return (result.data || [])
-      .filter((tag) => !term || [tag.code, tag.description, tag.branch].some((value) => value?.toLowerCase().includes(term)))
       .map((tag) => ({
         value: tag.id,
         label: `${tag.code}${tag.description ? ` — ${tag.description}` : ""} — ${tag.branch}`,
       }));
-  }, [result.data, search]);
+  }, [result.data]);
 
   return (
     <div className="space-y-3 md:col-span-2 xl:col-span-3">

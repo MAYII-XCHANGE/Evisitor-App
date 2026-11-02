@@ -226,9 +226,18 @@ test("table pagination is fixed at ten rows without a page-size selector", () =>
   assert.doesNotMatch(pagination, /Rows per page|onPageSizeChange|pageSizeOptions/);
 });
 
-test("top banner has no password-change control", () => {
+test("top banner shows branch identity and a Front Desk pending-registration bell", () => {
   const banner = source("../components/Top Banner/TopBanner.jsx");
+  const service = source("../services/selfServiceService.js");
   assert.doesNotMatch(banner, /FiKey|ChangePasswordModal|Change password/);
+  assert.match(banner, /user\?\.branch\?\.name/);
+  assert.match(banner, /ROLE_LABELS\[user\?\.role\]/);
+  assert.match(banner, /USER_ROLES\.FRONTDESK/);
+  assert.match(banner, /self-service-pending-count/);
+  assert.match(banner, /refetchInterval: 60_000/);
+  assert.match(banner, /99\+/);
+  assert.match(banner, /self-service-registrations\?status=PENDING_APPROVAL/);
+  assert.match(service, /self-service\/registrations\/pending-count/);
 });
 
 test("Super Admin dashboard hides recent activities and departments omit the code table column", () => {
@@ -307,14 +316,14 @@ test("self-service reviews stay in their dedicated page and are absent from View
   assert.doesNotMatch(visitorsPage, /selfServiceService/);
   assert.doesNotMatch(visitorsPage, /Awaiting Front Desk Review/);
   assert.doesNotMatch(visitorsPage, /SelfServiceReviewModal/);
-  assert.match(registrationsPage, /status,setStatus.*"PENDING_APPROVAL"/);
+  assert.match(registrationsPage, /requestedStatus.*"PENDING_APPROVAL"/);
+  assert.match(registrationsPage, /self-service-pending-count/);
   assert.match(registrationsPage, /selfServiceService\.list/);
   assert.match(registrationsPage, /SelfServiceReviewModal/);
   assert.match(registrationsPage, /selfServiceService\.approve/);
   assert.match(registrationsPage, /selfServiceService\.reject/);
-  assert.match(dashboardPage, /pendingSelfServiceRegistrations/);
-  assert.match(dashboardPage, /refetchInterval: canReviewSelfService \? 5000/);
-  assert.match(dashboardPage, /SelfServiceReviewModal/);
+  assert.match(service, /pendingCount/);
+  assert.doesNotMatch(dashboardPage, /SelfServiceReviewModal/);
 });
 
 test("end-of-day handover exposes deadlines, Security queue, checkout, and controlled extensions", () => {

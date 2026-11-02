@@ -192,26 +192,6 @@ export const BranchReportsPage = () => {
         {(summary.data?.kpis || []).map((kpi) => <KpiCard key={kpi.key} kpi={kpi} />)}
       </div>
 
-      <Card>
-        <div className="mb-5 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-          <h3 className="font-bold text-gray-900 dark:text-white">Visitor traffic trend</h3>
-          <span className="text-sm text-gray-500">{formatDate(range.startDate)} to {formatDate(range.endDate)}</span>
-        </div>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={summary.data?.dailyTraffic || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} />
-              <YAxis allowDecimals={false} />
-              <Tooltip labelFormatter={formatDate} />
-              <Legend />
-              <Line type="monotone" dataKey="visitors" stroke="#01B0F1" strokeWidth={3} dot={false} />
-              <Line type="monotone" dataKey="appointments" stroke="#10B981" strokeWidth={3} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-
       <div className="grid gap-6 xl:grid-cols-2">
         <BreakdownChart title="Visit status breakdown" data={summary.data?.visitStatuses} />
         <BreakdownChart title="Visitor type breakdown" data={summary.data?.visitorTypes} />
