@@ -104,45 +104,6 @@ export const DashboardPage = () => {
         ))}
       </div>
 
-      {canReviewSelfService && (
-        <Card>
-          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">Pending self-service registrations</h3>
-              <p className="mt-1 text-sm text-gray-500">Branch-scoped submissions waiting for Front Desk approval or rejection.</p>
-            </div>
-            <Button variant="secondary" onClick={() => navigate("/visitors")}>View all visitors</Button>
-          </div>
-          <div className="table-scroll overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-gray-500">
-                <tr>
-                  {["Reference", "Visitor", "Host / Department", "Branch", "Submitted", "Status", "Action"].map((heading) => (
-                    <th key={heading} className="border-b border-gray-100 bg-surface-muted px-4 py-3">{heading}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(data?.pendingSelfServiceRegistrations || []).map((registration) => (
-                  <tr key={registration.id}>
-                    <td className="border-b border-gray-100 px-4 py-4 font-semibold text-primary-700">{registration.reference}</td>
-                    <td className="border-b border-gray-100 px-4 py-4"><span className="font-semibold text-gray-900 dark:text-white">{registration.fullName}</span><span className="mt-1 block text-xs text-gray-500">{registration.phoneNumber}</span></td>
-                    <td className="border-b border-gray-100 px-4 py-4">{registration.hostName || "—"}<span className="mt-1 block text-xs text-gray-500">{registration.departmentName || "—"}</span></td>
-                    <td className="border-b border-gray-100 px-4 py-4">{registration.branchName}</td>
-                    <td className="border-b border-gray-100 px-4 py-4 text-gray-500">{formatDateTime(registration.submittedAt)}</td>
-                    <td className="border-b border-gray-100 px-4 py-4"><StatusBadge status={titleCase(registration.status)} /></td>
-                    <td className="border-b border-gray-100 px-4 py-4"><Button variant="secondary" className="px-3" onClick={() => setReviewingRegistration(registration)}><FiEye /> Review</Button></td>
-                  </tr>
-                ))}
-                {!(data?.pendingSelfServiceRegistrations || []).length && (
-                  <tr><td colSpan="7" className="px-4 py-10 text-center text-sm text-gray-500">No self-service registrations are waiting for this branch.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
-
       <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
         <Card>
           <div className="mb-5 flex items-center justify-between">
@@ -186,39 +147,6 @@ export const DashboardPage = () => {
 
       {(!hideActiveVisitors || !hideRecentActivities) && (
       <div className={`grid gap-6 ${!hideActiveVisitors && !hideRecentActivities ? "xl:grid-cols-[1.2fr_0.8fr]" : ""}`}>
-        {!hideActiveVisitors && (
-          <Card>
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">Active visitors</h3>
-              {/* {canOpenActiveVisitors && <Button variant="secondary" onClick={() => navigate("/active-visitors")}>View all</Button>} */}
-            </div>
-            <div className="table-scroll overflow-x-auto">
-              <table className="w-full min-w-[680px] text-left text-sm">
-                <thead className="text-xs uppercase tracking-wide text-gray-500">
-                  <tr>
-                    {["Visitor", "Company", "Host", "Branch", "Check-in", "Status"].map((heading) => (
-                      <th key={heading} className="border-b border-gray-100 bg-surface-muted px-4 py-3">{heading}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeVisitorsPage.content.map((visitor) => (
-                    <tr key={visitor.id}>
-                      <td className="border-b border-gray-100 px-4 py-4 font-semibold text-gray-900 dark:text-white">{visitor.name}</td>
-                      <td className="border-b border-gray-100 px-4 py-4 text-gray-600 dark:text-slate-300">{visitor.company}</td>
-                      <td className="border-b border-gray-100 px-4 py-4 text-gray-600 dark:text-slate-300">{visitor.host}</td>
-                      <td className="border-b border-gray-100 px-4 py-4 text-gray-600 dark:text-slate-300">{visitor.branch}</td>
-                      <td className="border-b border-gray-100 px-4 py-4 text-gray-500">{visitor.checkIn}</td>
-                      <td className="border-b border-gray-100 px-4 py-4"><StatusBadge status={visitor.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <Pagination page={activeVisitorsPage} onPageChange={activePagination.setPage} />
-          </Card>
-        )}
-
         {!hideRecentActivities && (
           <div className="space-y-6">
             <Card>
