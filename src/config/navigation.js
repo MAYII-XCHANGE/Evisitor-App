@@ -37,7 +37,7 @@ export const MENU_ITEMS = {
   photograph: { label: "Visitor Photograph", path: "/visitors/photograph", icon: FiCamera },
   issuePass: { label: "Issue Visitor Pass", path: "/visitor-pass/issue", icon: FiCreditCard },
   checkOut: { label: "Check Visitor Out", path: "/visitors/check-out", icon: FiLogOut },
-  selfServiceRegistrations: { label: "Self-Service Registrations", path: "/self-service-registrations", icon: FiInbox },
+  selfServiceRegistrations: { label: "Self-Service", path: "/self-service-registrations", icon: FiInbox },
   searchVisitors: { label: "Search Visitors", path: "/visitor-search", icon: FiSearch },
   approvals: { label: "Visitor Approvals", path: "/visitor-approvals", icon: FiCheckCircle },
   expectedVisitors: { label: "Today's Expected Visitors", path: "/expected-visitors", icon: FiClock },

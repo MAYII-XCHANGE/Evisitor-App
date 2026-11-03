@@ -228,16 +228,47 @@ test("table pagination is fixed at ten rows without a page-size selector", () =>
 
 test("top banner shows branch identity and a Front Desk pending-registration bell", () => {
   const banner = source("../components/Top Banner/TopBanner.jsx");
+  const sidebar = source("../components/SideBar/SideBar.jsx");
+  const mobileSidebar = source("../components/SideBar/MobileSideBar.jsx");
+  const pendingHook = source("../hooks/useSelfServicePendingCount.js");
   const service = source("../services/selfServiceService.js");
   assert.doesNotMatch(banner, /FiKey|ChangePasswordModal|Change password/);
   assert.match(banner, /user\?\.branch\?\.name/);
   assert.match(banner, /ROLE_LABELS\[user\?\.role\]/);
-  assert.match(banner, /USER_ROLES\.FRONTDESK/);
-  assert.match(banner, /self-service-pending-count/);
-  assert.match(banner, /refetchInterval: 60_000/);
-  assert.match(banner, /99\+/);
+  assert.match(pendingHook, /USER_ROLES\.FRONTDESK/);
+  assert.match(banner, /useSelfServicePendingCount/);
+  assert.match(pendingHook, /self-service-pending-count/);
+  assert.match(pendingHook, /refetchInterval: 60_000/);
+  assert.match(pendingHook, /99\+/);
+  assert.match(sidebar, /sidebar-pending-badge/);
+  assert.match(sidebar, /self-service-registrations/);
+  assert.match(mobileSidebar, /sidebar-pending-badge/);
+  assert.match(mobileSidebar, /self-service-registrations/);
   assert.match(banner, /self-service-registrations\?status=PENDING_APPROVAL/);
   assert.match(service, /self-service\/registrations\/pending-count/);
+});
+
+test("desktop and mobile sidebars expose shared profile and logout actions", () => {
+  const sidebar = source("../components/SideBar/SideBar.jsx");
+  const mobileSidebar = source("../components/SideBar/MobileSideBar.jsx");
+  const layout = source("../components/Layout/DashboardLayout.jsx");
+  const profile = source("../components/SideBar/UserProfileModal.jsx");
+  const styles = source("../components/SideBar/SideBar.css");
+
+  [sidebar, mobileSidebar].forEach((menu) => {
+    assert.match(menu, /sidebar-footer/);
+    assert.match(menu, /View profile/);
+    assert.match(menu, /Logout/);
+    assert.match(menu, /onViewProfile/);
+    assert.match(menu, /onLogout/);
+  });
+  assert.match(layout, /UserProfileModal/);
+  assert.match(layout, /ConfirmModal/);
+  assert.match(layout, /await logout\(\)/);
+  assert.match(profile, /user\?\.email/);
+  assert.match(profile, /user\?\.branch\?\.name/);
+  assert.match(profile, /ROLE_LABELS\[user\?\.role\]/);
+  assert.match(styles, /\.sidebar-footer\s*\{[\s\S]*?margin-top:\s*auto/);
 });
 
 test("Super Admin dashboard hides recent activities and departments omit the code table column", () => {

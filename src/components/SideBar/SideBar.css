@@ -84,6 +84,130 @@
   flex: 0 0 20px;
 }
 
+.sidebar-link-label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-pending-badge {
+  display: inline-grid;
+  min-width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0 7px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background-color: #dc2626;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 3px 8px rgb(15 23 42 / 0.2);
+}
+
+.sidebar-footer {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 22px;
+  border-top: 1px solid rgb(255 255 255 / 0.28);
+}
+
+.sidebar-account-summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 12px;
+  padding: 0 8px;
+  color: #ffffff;
+}
+
+.sidebar-account-avatar {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 2px solid rgb(255 255 255 / 0.7);
+  border-radius: 12px;
+  background: rgb(10 58 99 / 0.72);
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgb(10 58 99 / 0.2);
+}
+
+.sidebar-account-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.sidebar-account-copy strong,
+.sidebar-account-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-account-copy strong {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.sidebar-account-copy small {
+  color: rgb(255 255 255 / 0.76);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.sidebar-footer-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 11px;
+  margin-top: 7px;
+  padding: 11px 12px;
+  border: 1px solid rgb(255 255 255 / 0.24);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.11);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.sidebar-footer-button:hover {
+  border-color: rgb(255 255 255 / 0.5);
+  background: rgb(255 255 255 / 0.2);
+  transform: translateY(-1px);
+}
+
+.sidebar-footer-button:focus-visible {
+  outline: 3px solid rgb(255 255 255 / 0.42);
+  outline-offset: 2px;
+}
+
+.sidebar-footer-button svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.sidebar-footer-logout {
+  border-color: rgb(254 202 202 / 0.48);
+  background: rgb(127 29 29 / 0.22);
+  color: #fff1f2;
+}
+
+.sidebar-footer-logout:hover {
+  border-color: rgb(254 202 202 / 0.8);
+  background: rgb(153 27 27 / 0.38);
+}
+
 .submenu-link {
   padding: 4px 8px;
   color: #ffffff;
@@ -118,7 +242,8 @@
   }
 
   .dropdown-sidebar {
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     top: 0;
     right: 0;
